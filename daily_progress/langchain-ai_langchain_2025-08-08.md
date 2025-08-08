@@ -1,0 +1,65 @@
+# langchain-ai/langchain Daily Progress - 2025-08-08
+
+## Issues
+- with_structured_output() not implemented for ChatOllama #32460
+- fix(openai): ainvoke uses async _aget_response; add async tests #32459
+- docs(confident): update callback integration and examples #32458
+- fix(docs): add Spider as a webpage loader #32453
+- feat: new openai content #32452
+- docs: update Confident AI callback docs #32444
+- feat(langchain_v1): add refined `create_agent` #32440
+- docs: 0.4 version page #32435
+- fix(core): fix tracing for PDFs in v1 messages #32434
+- feat: add superlinked retriever integration #32433
+- docs(docs): AI/ML API integration #32430
+- docs(docs): add Oxylabs document loader #32429
+- ChatOllama: support for gpt-oss:20b with tool calling #32428
+- AzureChatOpenAI: support for gpt-oss-120b tool calling #32425
+- docs: api-reference fix for standard-tests #32424
+- fix(anthropic): update test model names and adjust token count assertions in integration tests #32422
+- fix(tests): add missing __init__.py to retrievers unit test directory #32421
+- release: 0.4 #32418
+- feat(groq): implement smart buffering for empty content chunks during streaming #32414
+- fix(anthropic): Add proxy #32409
+- fix: Support no-args tools by defaulting args to empty dict #32408
+- docs: update `prompt_templates.mdx` #32405
+- docs: clarify how to get LangSmith API key #32402
+- feat(core): add proxy support for mermaid png rendering #32400
+- OpenAIAssistantRunnable `ainvoke` calls `_get_response` instead of `_aget_response` #32398
+- feat(groq): add support for `json_mode` #32396
+- docs: move `standard-tests` or add dedicated section in API ref #32395
+- fix: resolve ValueError with extract_images=True (issue #26225) #32391
+- fix(core): ensure `RunnablePick` always returns `dict` #32389
+- Is there standard method to update the some parameters like max_tokens, temp., top_p, and so on before invoking and without reinitialization of llm whether api or local? #32388
+
+## Pull Requests
+- fix(openai): ainvoke uses async _aget_response; add async tests #32459
+- docs(confident): update callback integration and examples #32458
+- fix(docs): add Spider as a webpage loader #32453
+- feat: new openai content #32452
+- feat(langchain_v1): add refined `create_agent` #32440
+- docs: 0.4 version page #32435
+- fix(core): fix tracing for PDFs in v1 messages #32434
+- feat: add superlinked retriever integration #32433
+- docs(docs): AI/ML API integration #32430
+- docs(docs): add Oxylabs document loader #32429
+- docs: api-reference fix for standard-tests #32424
+- fix(anthropic): update test model names and adjust token count assertions in integration tests #32422
+- fix(tests): add missing __init__.py to retrievers unit test directory #32421
+- release: 0.4 #32418
+- feat(groq): implement smart buffering for empty content chunks during streaming #32414
+- fix(anthropic): Add proxy #32409
+- fix: Support no-args tools by defaulting args to empty dict #32408
+- docs: update `prompt_templates.mdx` #32405
+- docs: clarify how to get LangSmith API key #32402
+- feat(core): add proxy support for mermaid png rendering #32400
+- feat(groq): add support for `json_mode` #32396
+- fix: resolve ValueError with extract_images=True (issue #26225) #32391
+- fix(core): ensure `RunnablePick` always returns `dict` #32389
+- chore(text-splitters): bump mypy version to 1.17 #32387
+- chore(cli): add mypy strict checking #32386
+- chore(standard-tests): add mypy strict checking #32384
+- fix(langchain): improve and fix typing #32383
+- chore(langchain): fix deprecation warnings #32379
+- fix(docs): clarify that `batch` method doesn't use OpenAI Batch API in rate limit doc (#28508) #32376
+- docs: add anchorbrowser tools #32373

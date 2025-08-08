@@ -11,17 +11,18 @@ class Scheduler:
 
     def check_for_updates(self):
         subscriptions = self.subscription_manager.get_subscriptions()
-        updates = self.github_api.fetch_updates(subscriptions)
-        # 生成报告
-        report = self.report_generator.generate_report(updates)
+        
+        for repo in subscriptions:
+            print(f"正在检查 {repo} 的更新...")
+            updates = self.github_api.fetch_updates(repo)
+            markdown = self.report_generator.export_daily_progress(repo, updates)
+            self.report_generator.generate_daily_report(markdown)
 
-        # 通知
-        self.notifier.notify(report)
 
     def start(self):
         self.running = True  # 设置运行状态
         while self.running:  # 检查运行状态
-            self.check_for_updates()
+            # self.check_for_updates()
             # 使用可中断的sleep
             for _ in range(self.interval):
                 if not self.running:

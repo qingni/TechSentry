@@ -6,7 +6,7 @@ from report_generator import ReportGenerator
 from subscription import SubscriptionManager
 import threading
 from typing import Callable, Dict
-
+from llm import LLM
 class CommandLineInterface:
     """命令行界面类，封装所有交互逻辑"""
     
@@ -15,7 +15,8 @@ class CommandLineInterface:
         self.config = config
         self.github_api = GitHubAPI(config.github_token)
         self.notifier = Notifier(config.notification_settings)
-        self.report_generator = ReportGenerator()
+        llm = LLM()
+        self.report_generator = ReportGenerator(llm)
         self.subscription_manager = SubscriptionManager(config.subscriptions_file)
         
         # 初始化调度器
@@ -39,6 +40,8 @@ class CommandLineInterface:
             'list': self.list_subscriptions,
             'fetch': self.fetch_updates,
             'help': self.print_help,
+            'export': self.export_daily_progress,
+            'generate': self.generate_daily_report,
             'exit': self.exit_tool,
             'quit': self.exit_tool
         }
@@ -66,13 +69,21 @@ class CommandLineInterface:
     
     def fetch_updates(self):
         """立即获取更新"""
-        print("正在获取更新...")
-        subscriptions = self.subscription_manager.get_subscriptions()
-        updates = self.github_api.fetch_updates(subscriptions)
-        report = self.report_generator.generate_report(updates)
+        for repo in subscriptions:
+            print(f"正在检查 {repo} 的更新...")
+            updates = self.github_api.fetch_updates(repo)
+            markdown = self.report_generator.export_daily_progress(repo, updates)
+            self.report_generator.generate_daily_report(markdown)
         print("✓ 更新获取完成:")
-        print(report)
     
+    def export_daily_progress(self, repo):
+        """导出每日进度"""
+        self.github_api.export_repo_daily_progress(repo)
+            
+    def generate_daily_report(self, file):
+        """生成每日报告"""
+        self.report_generator.generate_daily_report(file)
+
     def print_help(self):
         """显示帮助信息"""
         help_text = """
@@ -83,6 +94,8 @@ GitHub Argus 命令行工具
   remove <repo>    移除订阅 (例如: owner/repo)
   list             列出所有订阅
   fetch            立即获取更新
+  export <repo>    导出每日进度
+  generate <file>  生成每日报告
   help             显示帮助信息
   exit/quit        退出工具
 """
@@ -101,12 +114,12 @@ GitHub Argus 命令行工具
         try:
             if command in self.commands:
                 # 处理带参数的命令
-                if command in ['add', 'remove'] and not args:
+                if command in ['add', 'remove', 'export', 'generate'] and not args:
                     print(f"错误: '{command}' 命令需要参数")
                     return
                 
                 # 执行命令
-                if command in ['add', 'remove']:
+                if command in ['add', 'remove', 'export', 'generate']:
                     self.commands[command](args[0])
                 else:
                     self.commands[command]()
