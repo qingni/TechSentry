@@ -1,19 +1,28 @@
-from argus.config import Config
-from argus.github_api import GitHubAPI
-from argus.subscription import SubscriptionManager
-from argus.notifier import Notifier
-from argus.report_generator import ReportGenerator
-from argus.updater import Updater
+from command.commandLineInterface import CommandLineInterface
+from command.commandParser import CommandParser
 
-def run():
-    config = Config()
-    github_api = GitHubAPI(config.get("github_token"))
-    subscription_manager = SubscriptionManager(config)
-    notifier = Notifier(config.get("smtp_server"), config.get("smtp_port"), config.get("sender_email"), config.get("receiver_email"))
-    report_generator = ReportGenerator([])  # Pass the actual updates here
-
-    updater = Updater(subscription_manager, notifier, report_generator)
-    updater.start()
+def main():
+    cli = CommandLineInterface()
+    parser = CommandParser()
+    
+    cli.print_help()
+    
+    while True:
+        try:
+            user_input = input("GitHub Argus> ").strip()
+            if not user_input:
+                continue
+                
+            parsed = parser.parse(user_input)
+            if parsed:
+                cli.execute_command(parsed.command, parsed.args)
+            else:
+                print("命令解析错误，请输入 'help' 查看帮助")
+                
+        except KeyboardInterrupt:
+            print("\n使用 'exit' 或 'quit' 命令退出程序")
+        except Exception as e:
+            print(f"发生错误: {str(e)}")
 
 if __name__ == "__main__":
-    run()
+    main()

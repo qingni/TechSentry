@@ -1,13 +1,13 @@
-import yaml
+import json
 
 class Config:
-    def __init__(self, config_file="config.yaml"):
-        self.config_file = config_file
-        self.config = self.load_config()
+    def __init__(self):
+        self.load_config()
 
     def load_config(self):
-        with open(self.config_file, "r") as file:
-            return yaml.safe_load(file)
-
-    def get(self, key):
-        return self.config.get(key)
+        with open('config.json', 'r') as f:
+            config = json.load(f)
+            self.github_token = config.get('github_token')
+            self.notification_settings = config.get('notification_settings')
+            self.subscriptions_file = config.get('subscriptions_file')
+            self.update_interval = config.get('update_interval', 24 * 60 * 60)  # Default to 24 hours

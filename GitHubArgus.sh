@@ -159,12 +159,12 @@ class ReportGenerator:
         return report
 EOL
 
-# 创建 src/updater.py
-cat <<EOL > src/updater.py
+# 创建 src/scheduler.py
+cat <<EOL > src/scheduler.py
 import schedule
 import time
 
-class Updater:
+class Scheduler:
     def __init__(self, subscription_manager, notifier, report_generator):
         self.subscription_manager = subscription_manager
         self.notifier = notifier
@@ -185,12 +185,12 @@ EOL
 
 # 创建 src/main.py
 cat <<EOL > src/main.py
-from argus.config import Config
-from argus.github_api import GitHubAPI
-from argus.subscription import SubscriptionManager
-from argus.notifier import Notifier
-from argus.report_generator import ReportGenerator
-from argus.updater import Updater
+from config import Config
+from github_api import GitHubAPI
+from subscription import SubscriptionManager
+from notifier import Notifier
+from report_generator import ReportGenerator
+from scheduler import Scheduler
 
 def run():
     config = Config()
@@ -199,8 +199,8 @@ def run():
     notifier = Notifier(config.get("smtp_server"), config.get("smtp_port"), config.get("sender_email"), config.get("receiver_email"))
     report_generator = ReportGenerator([])  # Pass the actual updates here
 
-    updater = Updater(subscription_manager, notifier, report_generator)
-    updater.start()
+    scheduler = Scheduler(subscription_manager, notifier, report_generator)
+    scheduler.start()
 
 if __name__ == "__main__":
     run()
