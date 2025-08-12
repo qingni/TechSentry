@@ -1,23 +1,37 @@
 import os
-from datetime import date
 from pathlib import Path
-
+from utils import Utils
+from datetime import datetime
+from typing import Optional
 class ReportGenerator:
     def __init__(self, llm):
         self.llm = llm
 
-    def export_daily_progress(self, repo, updates):
-        # 处理目录路径
-        dir_path = "daily_progress"
-        os.makedirs(dir_path, exist_ok=True)
+    def export_daily_progress(self, 
+                              repo, 
+                              updates, 
+                              since: Optional[str] = None,
+                              until: Optional[str] = None,
+                              relative: Optional[str] = None) -> str:      
+        since, until = Utils._process_time_params(since, until, relative)
         
-        # 生成文件名和路径
-        file_name = f"{repo.replace('/', '_')}_{date.today()}.md"
-        file_path = os.path.join(dir_path, file_name)
+        # 处理时间范围
+        sinceFormat = Utils.format_date(since)
+        untilFormat = Utils.format_date(until)
+
+        # 解析仓库所有者和名称
+        owner, repo_name = Utils._parse_repo(repo)
+        
+        # 创建存储目录 (daily_progress/owner/repo/)
+        dir_path = f"daily_progress/{owner}/{repo_name}"
+        os.makedirs(dir_path, exist_ok=True)  # 确保目录存在
+        
+        # 生成文件名 (统一采用since_until.md格式)
+        file_path = f"{dir_path}/{sinceFormat}_{untilFormat}.md"
+        
         
         # 合并默认值和用户数据
         safe_updates = {
-            'commits': [],
             'issues': [],
             'pull_requests': [],
             **updates
@@ -26,8 +40,9 @@ class ReportGenerator:
         try:
             # 使用w+模式打开文件，不存在则创建，存在则覆盖
             with open(file_path, 'w+', encoding='utf-8') as f:
-                f.write(f"# Daily Progress for {repo}\n\n")
-                f.write(f"*Date: {date.today().strftime('%Y-%m-%d')}*\n\n")
+                f.write(f"# Daily Progress for {owner}/{repo}\n\n")
+                f.write(f"**Report Date**: {Utils.format_date(datetime.now().isoformat())}\n\n")
+                f.write(f"**Report Time Range**: {sinceFormat} 至 {untilFormat}\n\n")
                 
                 # 处理各部分内容的通用函数
                 def write_section(title, items):
@@ -38,7 +53,6 @@ class ReportGenerator:
                         f.write(f"No {title.lower()} recorded.\n\n")
                 
                 # 依次写入各部分
-                write_section("Commits", safe_updates['commits'])
                 write_section("Issues", safe_updates['issues'])
                 write_section("Pull Requests", safe_updates['pull_requests'])
             

@@ -4,5 +4,6 @@
     "slack_webhook_url": "your_slack_webhook_url"
   },
   "subscriptions_file": "subscriptions.json",
-  "update_interval": 86400
+  "update_interval": 86400,
+  "report_update_relative": "24hours"
 }
