@@ -1,8 +1,8 @@
-from command.commandLineInterface import CommandLineInterface
-from command.commandParser import CommandParser
+from command.command_interface import CommandInterface
+from command.command_parser import CommandParser
 
 def main():
-    cli = CommandLineInterface()
+    cli = CommandInterface()
     parser = CommandParser()
     
     cli.print_help()

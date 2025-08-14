@@ -1,4 +1,3 @@
-System Prompt:
 作为项目管理助理，按以下要求整理项目进展为中文简报：
 1. 分"新增功能"、"主要改进"、"修复问题"三部分
 2. 同类项合并，语言简洁，突出关键信息
@@ -30,18 +29,3 @@ System Prompt:
 - 更新了有关`llamacpp.ipynb`的安装选项文档。
 - 修复了关于Spider网页加载器的文档说明。
 - 修复了文档中语法、大小写和样式的问题。
-
-User Prompt:
-# Daily Progress for langchain-ai/langchain
-
-**Report Create Date**: 2025-08-14
-
-**Report Time Range**: 2025-08-13 至 2025-08-14
-
-## Issues
--  ChatOpenAI: Cannot use GPT-5 verbosity parameter with   structured output - ValueError on text/response_format    conflict #32492
-
-## Pull Requests
--  Update README.md #32542
--  docs: update outdated `README.md` content #32540
-

@@ -1,14 +1,12 @@
 from config import Config
-from scheduler import Scheduler
 from github_api import GitHubAPI
 from notifier import Notifier
 from report_generator import ReportGenerator
 from subscription import SubscriptionManager
-import threading
 from typing import Callable, Dict, Optional
 from llm import LLM
 
-class CommandLineInterface:
+class CommandInterface:
     """命令行界面类，封装所有交互逻辑"""
     
     def __init__(self):
@@ -19,22 +17,7 @@ class CommandLineInterface:
         llm = LLM()
         self.report_generator = ReportGenerator(llm)
         self.subscription_manager = SubscriptionManager(config.subscriptions_file)
-        
-        # 初始化调度器
-        self.scheduler = Scheduler(
-            github_api=self.github_api,
-            subscription_manager=self.subscription_manager,
-            notifier=self.notifier,
-            report_generator=self.report_generator,
-            interval=config.update_interval,
-            report_update_relative=config.report_update_relative
-        )
-        
-        # 启动调度器线程
-        self.scheduler_thread = threading.Thread(target=self._run_scheduler)
-        self.scheduler_thread.daemon = True
-        self.scheduler_thread.start()
-        
+    
         # 命令注册
         self.commands: Dict[str, Callable] = {
             'add': self.add_subscription,
@@ -47,11 +30,7 @@ class CommandLineInterface:
             'exit': self.exit_tool,
             'quit': self.exit_tool
         }
-    
-    def _run_scheduler(self):
-        """运行调度器"""
-        self.scheduler.start()
-    
+        
     def add_subscription(self, repo: str):
         """添加订阅"""
         self.subscription_manager.add_subscription(repo)
@@ -164,8 +143,6 @@ GitHub Argus 命令行工具
     def exit_tool(self):
         """退出工具"""
         print("正在退出 GitHub Argus...")
-        self.scheduler.stop()
-        self.scheduler_thread.join(timeout=5)
         print("✓ 已安全退出")
         exit(0)
     

@@ -40,8 +40,8 @@ class ReportGenerator:
         try:
             # 使用w+模式打开文件，不存在则创建，存在则覆盖
             with open(file_path, 'w+', encoding='utf-8') as f:
-                f.write(f"# Daily Progress for {owner}/{repo}\n\n")
-                f.write(f"**Report Date**: {Utils.format_date(datetime.now().isoformat())}\n\n")
+                f.write(f"# Daily Progress for {repo}\n\n")
+                f.write(f"**Report Create Date**: {Utils.format_date(datetime.now().isoformat())}\n\n")
                 f.write(f"**Report Time Range**: {sinceFormat} 至 {untilFormat}\n\n")
                 
                 # 处理各部分内容的通用函数
@@ -98,7 +98,7 @@ class ReportGenerator:
                 f.write(report)
             
             print(f"生成的报告已保存至: {report_file_path.resolve()}")
-            return report_file_path
+            return report, report_file_path
         
         except UnicodeDecodeError as e:
             raise Exception(f"文件编码错误，无法读取: {input_path.resolve()}") from e
