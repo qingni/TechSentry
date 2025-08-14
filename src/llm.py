@@ -1,5 +1,6 @@
 import os 
 from openai import OpenAI
+from logger import LOG
 
 class LLM:
   def __init__(self):
@@ -7,6 +8,7 @@ class LLM:
     # 添加System role来定义AI的行为和输出要求
     with open("prompt/report_prompt.txt", 'r', encoding='utf-8') as f:
         self.system_prompt = f.read()
+    LOG.add("logs/llm.log", rotation="1 MB", level="DEBUG")
                 
 
   def generate_daily_report(self, markdown_content, dry_run=False):
@@ -14,17 +16,26 @@ class LLM:
         {"role": "system", "content": self.system_prompt},
         {"role": "user", "content": markdown_content},
     ]
+    # 试运行，先输出prompt到文件调试用，调试成功给到llm，可避免浪费过多的token
     if dry_run:
+        LOG.info("Dry run mode enabled. Saving prompt to daily_progress/prompt.txt.")
         with open("daily_progress/prompt.txt", "w+") as f:
             # 同时保存system prompt和user prompt以便调试
             f.write(f"System Prompt:\n{self.system_prompt}\n\nUser Prompt:\n{markdown_content}")
-        test_llm_response = "# LangChain 项目进展\n\n**创建日期**: 2025-08-14  \n**时间周期**: 2025-08-13 至 2025-08-14\n\n## 新增功能\n无\n\n## 主要改进\n- 更新了README.md文档内容，以提高信息的准确性和可用性。\n\n## 修复问题\n- 修复了 ChatOpenAI 中使用 GPT-5 详细参数与结构化输出冲突导致的 ValueError 问题 (#32492)。"
+        LOG.debug(f"Prompt saved to daily_progress/prompt.txt")
+        test_llm_response = markdown_content
         return test_llm_response
     else:
-        response = self.client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=messages
-        )
-        print(response)
-    return response.choices[0].message.content
+        LOG.info("Starting report generation in GPT mode.")
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=messages
+             )
+            LOG.debug("GPT response: {}", response)
+            return response.choices[0].message.content
+        except Exception as e:
+            LOG.error("Error occurred while generating report: {}", e)
+            return None
+        
 

@@ -14,11 +14,10 @@ subscription_manager = SubscriptionManager(config.subscriptions_file)
 
 def export_progress_by_data_range(repo, relative):
     relative_time = Utils.get_key_by_description(relative)
-    updates = github_api.fetch_updates(repo)
+    updates = github_api.fetch_updates(repo, relative=relative_time)
     markdown = report_generator.export_daily_progress(repo, updates, relative=relative_time)
     report, report_file_path = report_generator.generate_daily_report(markdown)
-
-    print(f"报告已生成: {report} \n\n{report_file_path}")
+    
     # 修改返回类型为字符串
     return report, str(report_file_path)
 

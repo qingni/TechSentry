@@ -3,6 +3,8 @@ from pathlib import Path
 from utils import Utils
 from datetime import datetime
 from typing import Optional
+from logger import LOG
+
 class ReportGenerator:
     def __init__(self, llm):
         self.llm = llm
@@ -55,10 +57,11 @@ class ReportGenerator:
                 # 依次写入各部分
                 write_section("Issues", safe_updates['issues'])
                 write_section("Pull Requests", safe_updates['pull_requests'])
-            
+            LOG.info(f"已导出日报至 {file_path}")
             return file_path
         
         except IOError as e:
+            LOG.error(f"导出日报至 {file_path} 失败")
             raise Exception(f"Failed to write daily progress file: {str(e)}") from e
 
     
@@ -68,10 +71,12 @@ class ReportGenerator:
         
         # 检查输入文件是否存在
         if not input_path.exists():
+            LOG.error(f"输入文件不存在: {input_path.resolve()}")
             raise FileNotFoundError(f"输入文件不存在: {input_path.resolve()}")
         
         # 检查路径是否指向文件（而非目录）
         if not input_path.is_file():
+            LOG.error(f"路径指向的是目录，而非文件: {input_path.resolve()}")
             raise IsADirectoryError(f"路径指向的是目录，而非文件: {input_path.resolve()}")
         
         try:
@@ -81,6 +86,7 @@ class ReportGenerator:
             
             # 检查文件内容是否为空
             if not content.strip():
+                LOG.error(f"输入文件内容为空: {input_path.resolve()}")
                 raise ValueError(f"输入文件内容为空: {input_path.resolve()}")
             
             # 调用LLM生成报告
@@ -97,13 +103,15 @@ class ReportGenerator:
             with open(report_file_path, 'w', encoding='utf-8') as f:
                 f.write(report)
             
-            print(f"生成的报告已保存至: {report_file_path.resolve()}")
+            LOG.info(f"生成的报告已保存至: {report_file_path.resolve()}")
             return report, report_file_path
         
         except UnicodeDecodeError as e:
+            LOG.error(f"文件编码错误，无法读取: {input_path.resolve()}")
             raise Exception(f"文件编码错误，无法读取: {input_path.resolve()}") from e
         except Exception as e:
             # 捕获其他可能的异常（如LLM调用失败）
+            LOG.error(f"生成日报时发生错误: {str(e)}")
             raise Exception(f"生成日报时发生错误: {str(e)}") from e
         
     

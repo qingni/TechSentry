@@ -8,6 +8,7 @@ import threading
 from llm import LLM
 import daemon
 import time  # 导入time库，用于控制时间间隔
+from logger import LOG
 
 def _run_scheduler(scheduler):
   """运行调度器"""
@@ -36,6 +37,7 @@ def main():
   scheduler_thread.daemon = True
   scheduler_thread.start()
   
+  LOG.info("Scheduler thread started.")
   # 使用python-daemon库，以守护进程方式运行程序
   with daemon.DaemonContext():
     try:

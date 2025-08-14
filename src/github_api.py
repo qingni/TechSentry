@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Tuple
 import os
 from utils import Utils
+from logger import LOG
 class GitHubAPI:
     """增强版GitHub API客户端，支持相对时间范围和状态筛选"""
 
@@ -27,7 +28,7 @@ class GitHubAPI:
         # 处理时间参数
         since, until = Utils._process_time_params(since, until, relative)
         
-        print(f"fetch_updates----", repo, since, until)
+        LOG.info(f"fetch_updates----", repo, since, until)
         updates = {
             'pull_requests': self.fetch_pull_requests(repo, since, until),
             'issues': self.fetch_issues(repo, since, until)
@@ -189,7 +190,7 @@ class GitHubAPI:
             for pr in pull_requests[:20]:
                 f.write(f"- #{pr['number']}: {pr['title']}\n")
 
-        print(f"已导出进度报告至 {filename}")
+        LOG.info(f"已导出进度报告至 {filename}")
         return filename
 
     
