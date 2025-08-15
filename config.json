@@ -1,8 +1,15 @@
 {
   "notification_settings": {
-    "email": "your_email@example.com",
+    "email": {
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "email_from": "Lq15301353696@gmail.com",
+      "email_from_password": "fcku fmjm duis bcnh",
+      "email_to": "qinglili@tencent.com"
+    },
     "slack_webhook_url": "your_slack_webhook_url"
   },
   "subscriptions_file": "subscriptions.json",
-  "update_interval": 86400
+  "update_frequency_days": 1,
+  "update_execution_time": "08:00"
 }

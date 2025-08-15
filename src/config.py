@@ -13,4 +13,7 @@ class Config:
             config = json.load(f)
             self.notification_settings = config.get('notification_settings')
             self.subscriptions_file = config.get('subscriptions_file')
-            self.update_interval = config.get('update_interval', 24 * 60 * 60)  # Default to 24 hours
+            self.update_freq_days = config.get('update_frequency_days')
+            self.update_execution_time = config.get('update_execution_time')
+            self.notification_settings = config.get('notification_settings')
+            

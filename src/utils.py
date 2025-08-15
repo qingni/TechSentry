@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Optional, Tuple
-
+from logger import LOG
 class Utils:
     # 统一的时间定义数据结构
     relative_time_options = {
@@ -24,22 +24,29 @@ class Utils:
 
     @classmethod
     def _process_time_params(cls, since: Optional[str], until: Optional[str], 
-                        relative: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
+                        relative: str | int | None) -> Tuple[Optional[str], Optional[str]]:
         """处理时间参数，相对时间优先级高于绝对时间，默认使用今天的日期"""
         # 获取当前UTC时间（带时区信息）
         current_utc = datetime.now()
         
         # 处理相对时间（优先级最高）
         if relative:
-            if relative not in cls.relative_time_options:
-                raise ValueError(
-                    f"无效的相对时间选项: {relative}. "
-                    f"有效值为: {list(cls.relative_time_options.keys())}"
-                )
-            
             until_dt = current_utc
-            since_dt = until_dt - cls.relative_time_options[relative]['delta']
             
+            if relative in cls.relative_time_options:
+                since_dt = until_dt - cls.relative_time_options[relative]['delta']
+            
+            elif isinstance(relative, int):
+                # 处理整数（如 relative=3 表示 3 天）
+                since_dt = current_utc - timedelta(days=relative)
+            elif isinstance(relative, str):
+                try:
+                    days_int = int(relative)
+                except ValueError:
+                    LOG.error(f"错误：'{relative}' 不是有效整数！")
+                    days_int = 1
+                since_dt = current_utc - timedelta(days=days_int)
+                
             # 转换为ISO格式并添加'Z'表示UTC时间
             since = since_dt.isoformat()
             until = until_dt.isoformat()

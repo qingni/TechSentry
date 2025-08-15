@@ -104,7 +104,7 @@ class ReportGenerator:
                 f.write(report)
             
             LOG.info(f"生成的报告已保存至: {report_file_path.resolve()}")
-            return report, report_file_path
+            return report, str(report_file_path)
         
         except UnicodeDecodeError as e:
             LOG.error(f"文件编码错误，无法读取: {input_path.resolve()}")

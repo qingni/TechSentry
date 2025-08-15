@@ -34,64 +34,17 @@ System Prompt:
 User Prompt:
 # Daily Progress for langchain-ai/langchain
 
-**Report Create Date**: 2025-08-14
+**Report Create Date**: 2025-08-15
 
-**Report Time Range**: 2025-08-11 至 2025-08-14
+**Report Time Range**: 2025-08-14 至 2025-08-15
 
 ## Issues
--  ChatOpenAI: Cannot use GPT-5 verbosity parameter with   structured output - ValueError on text/response_format    conflict #32492
--  Using URL-PlayWriter/PlayWright Browser Toolkit in Jupyter Notebook  #8342
--  ChatOllama: support for gpt-oss:20b with tool calling #32428
--  Bug in retry runnable when called with batch() / abatch() #21326
--  Setting a custom `http_client` fails with unexpected keyword argument when using `ChatAnthropic` #30146
--  Google VertexAI `InvalidArgument: 400 Request contains an invalid argument` #30428
--  500 Internal Error when using google genai langchain with agents #16066
+No issues recorded.
 
 ## Pull Requests
--  Update README.md #32542
--  docs: update outdated `README.md` content #32540
--  docs: fixed additional grammar and style issues in how-to index #32533
--  docs(docs): Add RecallIO.AI as a memory provider #32331
--  fix: Support no-args tools by defaulting args to empty dict #32408
--  fix(docs): resolve langchain-azure-ai conflict with langchain-core #32528
--  docs(langchain): create SiliconFlow provider entry #32342
--  feat(docs): clarify structured output with tools ordering #32527
--  fix(core): use run tree post/patch #31493
--  fix(anthropic): incorrect input_tokens counting while streaming #32524
--  chore: update to use new LGP docs url #32522
--  chore: update README.md to use pepy downloads badge #32521
--  fix(anthropic): Add proxy #32409
--  fix(anthropic): incorrect `input_tokens` counting while streaming #32461
--  refactor(core): optimize `_first_max_tokens` with linear scan #31827
--  feat(anthropic): support `cache_control` as a kwarg #31523
--  fix(anthropic): update test model names and adjust token count assertions in integration tests #32422
--  docs(anthropic): add documentation for extended context windows in Claude Sonnet 4 #32517
--  chore(langchain): select ALL rules with exclusions #31930
--  release(openai): actually release 0.3.30 #32516
--  release(openai): 0.3.30 #32515
--  docs(docs): remove redundant integration details from ChatGradient page. #32514
--  feat(openai): officially support `verbosity` #32470
--  [WIP]: Implement OpenAI Batch API support for ChatOpenAI to enable 50% cost savings through asynchronous batch processing #32508
--  docs: fix broken links #32513
--  docs: add anchorbrowser #32494
--  docs: add Linux quick setup method for JaguarDB #32510
--  feat(docs): add truefoundry ai gateway #32362
--  docs: add Google partner guide for MCP Toolbox #32356
--  chore(text-splitters): bump mypy version to 1.17 #32387
--  chore(cli): add ruff rules D1 #32350
--  chore(cli): select ALL rules with exclusions #31936
--  chore: update CONTRIBUTING.md to more clearly mention forum #32509
--  feat(core): enhance string input parsing to handle JSON-like inputs #32001
--  feat(text-splitters): reverse preserved elements iterator in `HTMLSemanticPreservingSplitter` #31570
--  chore(standard-tests): add ruff rules D #32347
--  docs(deepseek): Add DeepSeek model option #32481
--  feat(openai): enhance error messages for vLLM compatibility #32314
--  docs(ollama): update `ollama.mdx` with note about basic auth support #32327
--  docs: add scrapeless integration documentation #32081
--  refactor: remove `sentence-transformers` dependency #32337
--  refactor: remove `sentence-transformers` dependency #32338
--  refactor: remove `sentence-transformers` dependency #32339
--  fix(docs): add Spider as a webpage loader #32453
--  docs: add integration guide for MCP Toolbox #32344
--  feat: add Desearch integration #31276
+-  chore: update integrations table #32556
+-  docs: formatting Tavily #32555
+-  docs: add pre-commit setup instructions to the dev setup guide #32553
+-  fix(core): Support no-args tools by defaulting args to empty dict #32530
+-  chore: add Chat LangChain to `README.md` #32545
 

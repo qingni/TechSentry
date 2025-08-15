@@ -1,5 +1,6 @@
 requests
 openai
-python-daemon
+schedule
 gradio
 loguru
+markdown2

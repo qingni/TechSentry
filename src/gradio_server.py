@@ -19,7 +19,7 @@ def export_progress_by_data_range(repo, relative):
     report, report_file_path = report_generator.generate_daily_report(markdown)
     
     # 修改返回类型为字符串
-    return report, str(report_file_path)
+    return report, report_file_path
 
 demo = gr.Interface(
   fn=export_progress_by_data_range,
