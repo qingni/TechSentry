@@ -94,7 +94,4 @@ User Prompt:
 -  fix(docs): add Spider as a webpage loader #32453
 -  docs: add integration guide for MCP Toolbox #32344
 -  feat: add Desearch integration #31276
--  fix(docs): handle collection not found error on RAG tutorial when qdrant is selected as vectorStore #32099
--  fix(docs): update `llamacpp.ipynb` for installation options on Mac #32341
--  docs: update `prompt_templates.mdx` #32405
 

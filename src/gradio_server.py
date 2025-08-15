@@ -25,7 +25,7 @@ demo = gr.Interface(
   fn=export_progress_by_data_range,
   title="GitHubArgus",
   inputs=[
-    gr.Dropdown(subscription_manager.get_subscriptions(), label="订阅列表", info="已订阅的仓库"),
+    gr.Dropdown(subscription_manager.get_subscriptions(), label="订阅管理", info="已订阅的仓库"),
     gr.Dropdown(Utils.get_all_relative_time_descriptions(), label="时间范围", info="选择时间范围")
   ],
   outputs=[gr.Markdown(), gr.File(label="下载报告")]
