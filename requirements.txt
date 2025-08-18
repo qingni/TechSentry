@@ -4,3 +4,4 @@ schedule
 gradio
 loguru
 markdown2
+bs4
