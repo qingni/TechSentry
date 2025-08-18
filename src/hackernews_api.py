@@ -47,8 +47,8 @@ def get_hackernews_latest():
                 'comments': comment_count
             })
             
-            # 只获取前20条热点
-            if len(stories) >= 20:
+            # 只获取前10条热点
+            if len(stories) >= 10:
                 break
         
         return stories
