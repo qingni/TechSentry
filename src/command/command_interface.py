@@ -14,7 +14,7 @@ class CommandInterface:
         self.config = config
         self.github_api = GitHubAPI(config.github_token)
         self.notifier = Notifier(config.notification_settings)
-        llm = LLM()
+        llm = LLM(config)
         self.report_generator = ReportGenerator(llm)
         self.subscription_manager = SubscriptionManager(config.subscriptions_file)
     

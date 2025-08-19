@@ -1,5 +1,4 @@
 from config import Config
-from scheduler import Scheduler
 from github_api import GitHubAPI
 from report_generator import ReportGenerator
 from subscription import SubscriptionManager
@@ -31,7 +30,7 @@ def main():
   
   config = Config()
   github_api = GitHubAPI(config.github_token)
-  llm = LLM()
+  llm = LLM(config)
   report_generator = ReportGenerator(llm)
   subscription_manager = SubscriptionManager(config.subscriptions_file)
   notifier = Notifier(config.notification_settings)

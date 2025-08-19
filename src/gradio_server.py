@@ -8,7 +8,7 @@ from utils import Utils
 
 config = Config()
 github_api = GitHubAPI(config.github_token)
-llm = LLM()
+llm = LLM(config)
 report_generator = ReportGenerator(llm)
 subscription_manager = SubscriptionManager(config.subscriptions_file)
 
@@ -33,6 +33,4 @@ demo = gr.Interface(
 
 if __name__ == "__main__":
     demo.launch(share=False)
-    # 可选带有用户认证的启动方式
-    # demo.launch(share=False, server_name="0.0.0.0", auth=("argus", "123456"))
 

@@ -90,7 +90,7 @@ class ReportGenerator:
                 raise ValueError(f"输入文件内容为空: {input_path.resolve()}")
             
             # 调用LLM生成报告
-            report = self.llm.generate_daily_report(content, True)
+            report = self.llm.generate_daily_report(content, False)
             
             # 生成输出文件路径
             report_file_path = input_path.with_name(f"{input_path.stem}_report.md")

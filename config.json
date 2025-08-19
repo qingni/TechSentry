@@ -11,5 +11,11 @@
   },
   "subscriptions_file": "subscriptions.json",
   "update_frequency_days": 1,
-  "update_execution_time": "08:00"
+  "update_execution_time": "08:00",
+  "llm": {
+    "model_type": "ollama",
+    "openai_model_name": "gpt-4o-mini",
+    "ollama_model_name": "gpt-oss:20b",
+    "ollama_api_url": "http://localhost:11434/v1"
+  }
 }

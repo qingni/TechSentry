@@ -17,3 +17,10 @@ class Config:
             self.update_execution_time = config.get('update_execution_time')
             self.notification_settings = config.get('notification_settings')
             
+            # 加载llm相关配置
+            llm_config = config.get('llm', {})
+            self.llm_model_type = llm_config.get('model_type')
+            self.openai_model_name = llm_config.get('openai_model_name')
+            self.ollama_model_name = llm_config.get('ollama_model_name')
+            self.ollama_api_url = llm_config.get('ollama_api_url')
+            
