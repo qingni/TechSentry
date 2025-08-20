@@ -29,6 +29,8 @@ class Notifier:
         smtp_server = self.notification_settings['email']['smtp_server']
         smtp_port = self.notification_settings['email']['smtp_port']
         sender_password = os.getenv('GMAIL_SPECIAL_PASSWORD')
+        if not sender_password:
+            raise EnvironmentError("环境变量GMAIL_SPECIAL_PASSWORD未设置")
         try:
             # 连接到 Gmail SMTP 服务器
             with smtplib.SMTP(smtp_server, smtp_port) as server:

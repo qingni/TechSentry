@@ -15,8 +15,8 @@ class LLM:
             self.client = OpenAI()
         elif self.model_type == "ollama":
             self.client = OpenAI(
-                base_url=self.config.ollama_api_url,  # Ollama 的 OpenAI‑compatible API
-                api_key="ollama",                     # 任意字符串，Ollama 不校验
+                base_url=self.get_ollama_base_url(),  # 自动适应容器环境
+                api_key="ollama",
             )
         else:
             raise ValueError(f"Unsupported model type: {self.model_type}")
@@ -25,7 +25,23 @@ class LLM:
         with open("prompt/report_prompt.txt", 'r', encoding='utf-8') as f:
             self.system_prompt = f.read()
         LOG.add("logs/llm.log", rotation="1 MB", level="DEBUG")     
-                
+    
+    def get_ollama_base_url(self):
+        """
+        自动判断运行环境，返回合适的Ollama基础地址
+        - 容器内环境：使用host.docker.internal
+        - 本地环境：使用localhost
+        """
+        # 方法1：检查是否存在容器特征文件（推荐）
+        if os.path.exists("/.dockerenv"):
+            return "http://host.docker.internal:11434/v1"
+        
+        # 方法2：检查是否有Docker相关环境变量（备选）
+        if "DOCKER_HOST" in os.environ or "container" in os.environ.get("HOSTNAME", ""):
+            return "http://host.docker.internal:11434/v1"
+        
+        # 默认使用本地地址
+        return self.config.ollama_api_url         
 
     def generate_daily_report(self, markdown_content, dry_run=False):
         """生成日报内容
@@ -103,6 +119,7 @@ class LLM:
         except Exception as e:
             LOG.error("Error occurred while generating report: {}", e)
             return None
+    
 
 if __name__ == "__main__":
     config = Config()
