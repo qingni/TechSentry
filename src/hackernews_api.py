@@ -1,5 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
+import os
+from datetime import datetime
 
 class HackerNewsAPI:
     def __init__(self):
@@ -64,6 +66,33 @@ class HackerNewsAPI:
         except Exception as e:
             print(f"解析错误: {e}")
             return None
+            
+    def export_to_md(self, stories, output_dir="hacker_news"):
+        """导出热点条目到Markdown文件"""
+        try:
+            # 创建日期目录
+            today = datetime.now().strftime("%Y-%m-%d")
+            hour = datetime.now().strftime("%H")
+            date_dir = os.path.join(output_dir, today)
+            os.makedirs(date_dir, exist_ok=True)
+            
+            # 创建文件路径
+            file_path = os.path.join(date_dir, f"{hour}.md")
+            
+            # 写入Markdown内容
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(f"# HackerNews 热点 {today} {hour}:00\n\n")
+                for story in stories:
+                    f.write(f"## {story['rank']}. [{story['title']}]({story['link']})\n")
+                    f.write(f"- 作者: {story['author']}\n")
+                    f.write(f"- 评论数: {story['comments']}\n\n")
+            
+            print(f"✅ 热点已导出到: {file_path}")
+            return file_path
+            
+        except Exception as e:
+            print(f"❌ 导出失败: {str(e)}")
+            return None
 
 if __name__ == "__main__":
     hackerNewsAPI = HackerNewsAPI()
@@ -71,6 +100,8 @@ if __name__ == "__main__":
     
     if latest_stories:
         print(f"HackerNews 最新热点：共获取到{len(latest_stories)}条热点\n")
+        # 导出到Markdown文件
+        hackerNewsAPI.export_to_md(latest_stories)
         for story in latest_stories:
             print(f"排名: {story['rank']}")
             print(f"标题: {story['title']}")
