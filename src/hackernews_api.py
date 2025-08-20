@@ -1,70 +1,76 @@
 import requests
 from bs4 import BeautifulSoup
 
-def get_hackernews_latest():
-    # HackerNews 最新热点页面 URL
-    url = 'https://news.ycombinator.com/newest'
-    
-    try:
-        # 发送请求获取页面内容
-        response = requests.get(url)
-        response.raise_for_status()  # 检查请求是否成功
+class HackerNewsAPI:
+    def __init__(self):
+        self.url = 'https://news.ycombinator.com/newest'
         
-        # 解析 HTML
-        soup = BeautifulSoup(response.text, 'html.parser')
+    def get_hackernews_latest(self):
         
-        # 查找所有热点条目
-        stories = []
-        # HackerNews 的条目使用 class 为 "athing" 的 tr 标签
-        for item in soup.select('tr.athing'):
-            # 获取排名
-            rank = item.select_one('.rank').get_text(strip=True).replace('.', '')
+        try:
+            # 发送请求获取页面内容
+            response = requests.get(self.url)
+            response.raise_for_status()  # 检查请求是否成功
             
-            # 获取标题和链接
-            title_tag = item.select_one('.title a')
-            title = title_tag.get_text(strip=True)
-            link = title_tag['href']
+            # 解析 HTML
+            soup = BeautifulSoup(response.text, 'html.parser')
             
-            # 获取下一行的额外信息（作者、时间等）
-            next_row = item.find_next_sibling('tr')
-            if next_row:
-                # 获取作者
-                author = next_row.select_one('.hnuser')
-                author = author.get_text(strip=True) if author else 'Unknown'
+            # 查找所有热点条目
+            stories = []
+            # HackerNews 的条目使用 class 为 "athing" 的 tr 标签
+            for item in soup.select('tr.athing'):
+                # 获取排名
+                rank = item.select_one('.rank').get_text(strip=True).replace('.', '')
                 
-                # 获取评论数
-                comments = next_row.select_one('.subtext a:last-child')
-                if comments and 'comment' in comments.get_text():
-                    comment_count = comments.get_text(strip=True).split()[0]
-                else:
-                    comment_count = '0'
+                # 获取标题和链接
+                title_tag = item.select_one('.title a')
+                title = title_tag.get_text(strip=True)
+                link = title_tag['href']
+                
+                # 验证链接协议
+                if not link.startswith(('http://', 'https://')):
+                    continue
+                
+                # 获取下一行的额外信息（作者、时间等）
+                next_row = item.find_next_sibling('tr')
+                comment_count = '0'
+                if next_row:
+                    # 获取作者
+                    author = next_row.select_one('.hnuser')
+                    author = author.get_text(strip=True) if author else 'Unknown'
+                    
+                    # 获取评论数
+                    # 查找包含评论数的 <a> 标签
+                    comment_links = next_row.select('.subtext a')
+                    for comment_link in comment_links:
+                        link_text = comment_link.get_text(strip=True)
+                        if 'comment' in link_text:
+                            comment_count = link_text.split()[0]
+                            break
+                
+                stories.append({
+                    'rank': rank,
+                    'title': title,
+                    'link': link,
+                    'author': author,
+                    'comments': comment_count
+                })
             
-            stories.append({
-                'rank': rank,
-                'title': title,
-                'link': link,
-                'author': author,
-                'comments': comment_count
-            })
-            
-            # 只获取前10条热点
-            if len(stories) >= 10:
-                break
+            return stories
         
-        return stories
-    
-    except requests.exceptions.RequestException as e:
-        print(f"请求错误: {e}")
-        return None
-    except Exception as e:
-        print(f"解析错误: {e}")
-        return None
+        except requests.exceptions.RequestException as e:
+            print(f"请求错误: {e}")
+            return None
+        except Exception as e:
+            print(f"解析错误: {e}")
+            return None
 
 if __name__ == "__main__":
-    latest_stories = get_hackernews_latest()
+    hackerNewsAPI = HackerNewsAPI()
+    latest_stories = hackerNewsAPI.get_hackernews_latest()
     
     if latest_stories:
-        print("HackerNews 最新热点：\n")
+        print(f"HackerNews 最新热点：共获取到{len(latest_stories)}条热点\n")
         for story in latest_stories:
             print(f"排名: {story['rank']}")
             print(f"标题: {story['title']}")
