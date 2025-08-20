@@ -67,7 +67,7 @@ class HackerNewsAPI:
             print(f"解析错误: {e}")
             return None
             
-    def export_to_md(self, stories, output_dir="hacker_news"):
+    def export_hours_hack_news(self, stories, output_dir="hacker_news"):
         """导出热点条目到Markdown文件"""
         try:
             # 创建日期目录
