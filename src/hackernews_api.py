@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import os
 from datetime import datetime
-
+from logger import LOG
 class HackerNewsAPI:
     def __init__(self):
         self.url = 'https://news.ycombinator.com/newest'
@@ -112,15 +112,17 @@ class HackerNewsAPI:
                 print(f"❌ 当日目录不存在: {daily_dir}")
                 return None
             
-            # 获取当天目录下所有小时文件（按时间排序）
+            # 获取当天目录下所有小时文件（按时间排序），排除带_report的文件
             hour_files = []
             for filename in os.listdir(daily_dir):
-                if filename.endswith(".md"):
-                    # 提取小时部分
-                    hour_str = filename.split(".")[0]
-                    if hour_str.isdigit():
-                        hour_files.append((int(hour_str), filename))
+                # 检查文件扩展名且不包含_report
+                if filename.endswith(".md") and "_report" not in filename:
+                    # 提取小时部分（更安全的方式）
+                    base_name = os.path.splitext(filename)[0]
+                    if base_name.isdigit():
+                        hour_files.append((int(base_name), filename))
             
+            LOG.info(f"找到 {len(hour_files)} 个小时文件: {hour_files}")
             # 按小时排序
             hour_files.sort(key=lambda x: x[0])
             
@@ -139,11 +141,11 @@ class HackerNewsAPI:
                     # 每个小时之间加一个空行
                     report_file.write("\n")
             
-            print(f"✅ 每日报告已生成: {report_file_path}")
+            LOG.info(f"✅ 每日报告已生成: {report_file_path}")
             return report_file_path
             
         except Exception as e:
-            print(f"❌ 生成每日报告失败: {str(e)}")
+            LOG.error(f"❌ 生成每日报告失败: {str(e)}")
             return None
 
 if __name__ == "__main__":

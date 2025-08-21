@@ -20,10 +20,7 @@ class LLM:
             )
         else:
             raise ValueError(f"Unsupported model type: {self.model_type}")
-        
-        # 添加System role来定义AI的行为和输出要求
-        with open("prompt/report_prompt.txt", 'r', encoding='utf-8') as f:
-            self.system_prompt = f.read()
+
         LOG.add("logs/llm.log", rotation="1 MB", level="DEBUG")     
     
     def get_ollama_base_url(self):
@@ -43,7 +40,7 @@ class LLM:
         # 默认使用本地地址
         return self.config.ollama_api_url         
 
-    def generate_daily_report(self, markdown_content, dry_run=False):
+    def generate_daily_report(self, system_prompt, markdown_content, dry_run=False):
         """生成日报内容
         
         Args:
@@ -54,16 +51,16 @@ class LLM:
             str: 生成的日报内容
         """
         messages = [
-            {"role": "system", "content": self.system_prompt},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": markdown_content},
         ]
         # 试运行，先输出prompt到文件调试用，调试成功给到llm，可避免浪费过多的token
         if dry_run:
-            LOG.info("Dry run mode enabled. Saving prompt to daily_progress/prompt.txt.")
-            with open("daily_progress/prompt.txt", "w+") as f:
+            LOG.info("Dry run mode enabled. Saving prompt to prompts/dry_run_prompt.txt.")
+            with open("prompts/dry_run_prompt.txt", "w+") as f:
                 # 同时保存system prompt和user prompt以便调试
-                f.write(f"System Prompt:\n{self.system_prompt}\n\nUser Prompt:\n{markdown_content}")
-            LOG.debug(f"Prompt saved to daily_progress/prompt.txt")
+                f.write(f"System Prompt:\n{system_prompt}\n\nUser Prompt:\n{markdown_content}")
+            LOG.debug(f"Prompt saved to prompts/dry_run_prompt.txt")
             test_llm_response = markdown_content
             return test_llm_response
 
@@ -124,6 +121,37 @@ class LLM:
 if __name__ == "__main__":
     config = Config()
     llm = LLM(config)
+    system_prompt = """作为项目管理助理，按以下要求整理项目进展为中文简报：
+1. 分"新增功能"、"主要改进"、"修复问题"三部分
+2. 同类项合并，语言简洁，突出关键信息
+3. 避免过多技术术语，每项一句话
+4. 使用清晰的markdown格式
+    
+参考示例如下：
+
+# LangChain 项目进展
+
+**创建日期**: 2025-08-12 17:17:07  
+**时间周期**: 2025-08-11 17:17:07 至 2025-08-12 17:17:07
+
+## 新增功能
+- 增加了对JSON类输入的字符串解析功能。
+- 添加了Desearch集成。
+- 提升了针对vLLM兼容性的错误消息。
+- 增设了DeepSeek模型选项。
+- 增加了TrueFoundry AI网关的文档。
+
+## 主要改进
+- 文档中新增了Linux JaguarDB快速设置方法及Google合作伙伴指南。
+- 重构了部分代码，去除了`sentence-transformers`依赖。
+- 更新了`standard-tests`及文档对Tool Artifacts与Injected State的说明。
+- 切割器的元素迭代器增加了反向保留功能。
+
+## 修复问题
+- 修正了RAG教程中关于当qdrant作为向量存储时未找到集合的错误处理。
+- 更新了有关`llamacpp.ipynb`的安装选项文档。
+- 修复了关于Spider网页加载器的文档说明。
+- 修复了文档中语法、大小写和样式的问题。"""
     
     markdown_content = """# Daily Progress for ollama/ollama
 
@@ -145,4 +173,6 @@ if __name__ == "__main__":
 -  doc: clarify both rocm and main bundle necessary #11900
 
 """
-    llm.generate_daily_report(markdown_content)
+
+
+    llm.generate_daily_report(system_prompt, markdown_content, dry_run=True)

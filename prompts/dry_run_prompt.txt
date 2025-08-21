@@ -32,19 +32,22 @@ System Prompt:
 - 修复了文档中语法、大小写和样式的问题。
 
 User Prompt:
-# Daily Progress for langchain-ai/langchain
+# Daily Progress for ollama/ollama
 
 **Report Create Date**: 2025-08-15
 
 **Report Time Range**: 2025-08-14 至 2025-08-15
 
 ## Issues
-No issues recorded.
+-  Disable Thinking Mode #10492
+-  Allow context to be set from the command line. #8356
+-  Lates version of olllama (installer 0.9.6) on Windows not running "olllama app" #11556
 
 ## Pull Requests
--  chore: update integrations table #32556
--  docs: formatting Tavily #32555
--  docs: add pre-commit setup instructions to the dev setup guide #32553
--  fix(core): Support no-args tools by defaulting args to empty dict #32530
--  chore: add Chat LangChain to `README.md` #32545
+-  New Memory Management #11090
+-  Revert "cuda: leverage JIT for smaller footprint (#11635)" #11913
+-  fix arm linux build when HWCAP2_SVE2 undefined #11908
+-  convert: skip reading into memory when possible #11507
+-  update vendored llama.cpp and ggml #11823
+-  doc: clarify both rocm and main bundle necessary #11900
 

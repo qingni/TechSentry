@@ -17,7 +17,7 @@ class ReportGenerator:
         预加载prompt
         """
         for report_type in self.report_types:
-            prompt_file = f"prompts/{report_type}_{self.llm.model_type}.txt"
+            prompt_file = f"prompts/{report_type}_{self.llm.model_type}_prompt.txt"
             if not os.path.exists(prompt_file):
                 LOG.error(f"prompt文件未找到: {prompt_file}")
                 raise FileNotFoundError(f"prompt文件未找到: {prompt_file}")
@@ -25,7 +25,19 @@ class ReportGenerator:
                 self.prompts[report_type] = f.read()
                 
     
-    def generate_daily_report(self, markdown_file_path):
+    def generate_github_daily_report(self, markdown_file_path):
+        return self._generate_report(markdown_file_path, 'github')
+        
+    def generate_hack_news_hours_report(self, markdown_file_path):
+        return self._generate_report(markdown_file_path, 'hack_news_hours')
+      
+    def generate_hack_news_daily_report(self, markdown_file_path):
+        return self._generate_report(markdown_file_path, 'hack_news_daily')
+    
+    def generate_github_trend_daily_report(self, markdown_file_path):
+        return self._generate_report(markdown_file_path, 'github_trend_daily')
+      
+    def _generate_report(self, markdown_file_path, report_type, output_suffix="_report"):
         # 转换为Path对象，方便路径操作
         input_path = Path(markdown_file_path)
         
@@ -39,21 +51,23 @@ class ReportGenerator:
             LOG.error(f"路径指向的是目录，而非文件: {input_path.resolve()}")
             raise IsADirectoryError(f"路径指向的是目录，而非文件: {input_path.resolve()}")
         
+        system_prompt = self.prompts[report_type]
+        
         try:
             # 读取输入文件内容，指定编码
             with open(input_path, 'r', encoding='utf-8') as f:
-                content = f.read()
+                markdown_content = f.read()
             
             # 检查文件内容是否为空
-            if not content.strip():
+            if not markdown_content.strip():
                 LOG.error(f"输入文件内容为空: {input_path.resolve()}")
                 raise ValueError(f"输入文件内容为空: {input_path.resolve()}")
             
             # 调用LLM生成报告
-            report = self.llm.generate_daily_report(content, False)
+            report = self.llm.generate_daily_report(system_prompt, markdown_content, False)
             
             # 生成输出文件路径
-            report_file_path = input_path.with_name(f"{input_path.stem}_report.md")
+            report_file_path = input_path.with_name(f"{input_path.stem}{output_suffix}.md")
             
             # 确保输出目录存在
             output_dir = input_path.parent
@@ -73,5 +87,3 @@ class ReportGenerator:
             # 捕获其他可能的异常（如LLM调用失败）
             LOG.error(f"生成日报时发生错误: {str(e)}")
             raise Exception(f"生成日报时发生错误: {str(e)}") from e
-        
-    

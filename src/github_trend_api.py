@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import os
 from datetime import datetime
-
+from logger import LOG
 class GithubTrendAPI:
   def __init__(self):
     self.headers = {
@@ -15,7 +15,6 @@ class GithubTrendAPI:
     
   def get_github_trending(self) -> list[dict]:
       
-
       try:
           response = requests.get(self.url, headers=self.headers, timeout=10)
           response.raise_for_status()
@@ -23,7 +22,7 @@ class GithubTrendAPI:
 
           repo_containers = soup.find_all("article", class_="Box-row")
           if not repo_containers:
-              print("未找到仓库列表，可能页面结构已更新或请求被拦截")
+              LOG.error("未找到仓库列表，可能页面结构已更新或请求被拦截")
               return []
 
           repo_data = []
@@ -62,7 +61,7 @@ class GithubTrendAPI:
           return repo_data
 
       except requests.exceptions.RequestException as e:
-          print(f"请求失败：{str(e)}")
+          LOG.error(f"请求失败：{str(e)}")
           return []
 
   def generate_daily_github_trend(self, repos: list[dict], directory: str = "github_trend"):
@@ -92,7 +91,8 @@ class GithubTrendAPI:
               f.write(f"- **Fork数**: {repo['fork']}\n")
               f.write(f"- **语言**: {repo['language']}\n\n")
       
-      print(f"已导出到文件: {file_path}")
+      LOG.info(f"已导出到文件: {file_path}")
+      return file_path
 
 if __name__ == "__main__":
     githubTrendAPI = GithubTrendAPI()

@@ -65,7 +65,7 @@ class CommandInterface:
             updates = self.github_api.fetch_updates(repo)
             if updates:
                 markdown = self.github_api.export_daily_progress(repo, updates)
-                self.report_generator.generate_daily_report(markdown)
+                self.report_generator.generate_github_daily_report(markdown)
             else:
                 print(f"  {repo} 暂无新更新")
         print("✓ 更新获取完成")
@@ -91,7 +91,7 @@ class CommandInterface:
     
     def generate_daily_report(self, file: str):
         """生成每日报告到指定文件"""
-        self.report_generator.generate_daily_report(file_path=file)
+        self.report_generator.generate_github_daily_report(file_path=file)
         print(f"✓ 每日报告已生成至: {file}")
 
     def print_help(self):

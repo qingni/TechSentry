@@ -7,7 +7,7 @@
       "email_from_password": "fcku fmjm duis bcnh",
       "email_to": "qinglili@tencent.com"
     },
-    "slack_webhook_url": "your_slack_webhook_url"
+    "wx_webhook_url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=a812348c-0257-4496-a9ba-cf06bd797564"
   },
   "subscriptions_file": "subscriptions.json",
   "update_frequency_days": 1,

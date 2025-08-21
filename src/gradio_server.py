@@ -16,7 +16,7 @@ def export_progress_by_data_range(repo, relative):
     relative_time = Utils.get_key_by_description(relative)
     updates = github_api.fetch_updates(repo, relative=relative_time)
     markdown = github_api.export_daily_progress(repo, updates, relative=relative_time)
-    report, report_file_path = report_generator.generate_daily_report(markdown)
+    report, report_file_path = report_generator.generate_github_daily_report(markdown)
     
     # 修改返回类型为字符串
     return report, report_file_path
