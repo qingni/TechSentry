@@ -17,5 +17,11 @@
     "openai_model_name": "gpt-4o-mini",
     "ollama_model_name": "gpt-oss:20b",
     "ollama_api_url": "http://localhost:11434/v1"
-  }
+  },
+  "report_types":[
+    "github",
+    "hack_news_hours",
+    "hack_news_daily",
+    "github_trend_daily"
+  ]
 }

@@ -6,64 +6,24 @@ from typing import Optional
 from logger import LOG
 
 class ReportGenerator:
-    def __init__(self, llm):
+    def __init__(self, llm, report_types):
         self.llm = llm
-
-    def export_daily_progress(self, 
-                              repo, 
-                              updates, 
-                              since: Optional[str] = None,
-                              until: Optional[str] = None,
-                              relative: Optional[str] = None) -> str:      
-        since, until = Utils._process_time_params(since, until, relative)
+        self.report_types = report_types
+        self.prompts = {}
+        self.preload_prompt()
         
-        # 处理时间范围
-        sinceFormat = Utils.format_date(since)
-        untilFormat = Utils.format_date(until)
-
-        # 解析仓库所有者和名称
-        owner, repo_name = Utils._parse_repo(repo)
-        
-        # 创建存储目录 (daily_progress/owner/repo/)
-        dir_path = f"daily_progress/{owner}/{repo_name}"
-        os.makedirs(dir_path, exist_ok=True)  # 确保目录存在
-        
-        # 生成文件名 (统一采用since_until.md格式)
-        file_path = f"{dir_path}/{sinceFormat}_{untilFormat}.md"
-        
-        
-        # 合并默认值和用户数据
-        safe_updates = {
-            'issues': [],
-            'pull_requests': [],
-            **updates
-        }
-        
-        try:
-            # 使用w+模式打开文件，不存在则创建，存在则覆盖
-            with open(file_path, 'w+', encoding='utf-8') as f:
-                f.write(f"# Daily Progress for {repo}\n\n")
-                f.write(f"**Report Create Date**: {Utils.format_date(datetime.now().isoformat())}\n\n")
-                f.write(f"**Report Time Range**: {sinceFormat} 至 {untilFormat}\n\n")
+    def preload_prompt(self):
+        """
+        预加载prompt
+        """
+        for report_type in self.report_types:
+            prompt_file = f"prompts/{report_type}_{self.llm.model_type}.txt"
+            if not os.path.exists(prompt_file):
+                LOG.error(f"prompt文件未找到: {prompt_file}")
+                raise FileNotFoundError(f"prompt文件未找到: {prompt_file}")
+            with open(prompt_file, 'r', encoding='utf-8') as f:
+                self.prompts[report_type] = f.read()
                 
-                # 处理各部分内容的通用函数
-                def write_section(title, items):
-                    f.write(f"## {title}\n")
-                    if items:
-                        f.write('\n'.join(f"-  {item['title']} #{item['number']}" for item in items) + '\n\n')
-                    else:
-                        f.write(f"No {title.lower()} recorded.\n\n")
-                
-                # 依次写入各部分
-                write_section("Issues", safe_updates['issues'])
-                write_section("Pull Requests", safe_updates['pull_requests'])
-            LOG.info(f"已导出日报至 {file_path}")
-            return file_path
-        
-        except IOError as e:
-            LOG.error(f"导出日报至 {file_path} 失败")
-            raise Exception(f"Failed to write daily progress file: {str(e)}") from e
-
     
     def generate_daily_report(self, markdown_file_path):
         # 转换为Path对象，方便路径操作

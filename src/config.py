@@ -24,3 +24,6 @@ class Config:
             self.ollama_model_name = llm_config.get('ollama_model_name')
             self.ollama_api_url = llm_config.get('ollama_api_url')
             
+            # 获取报告类型
+            self.report_types = config.get('report_types', ['github', 'github_trend_daily'])
+            

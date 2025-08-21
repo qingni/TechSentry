@@ -20,7 +20,7 @@ def github_job(github_api, subscription_manager, report_generator, notifier, day
   LOG.info(f"订阅列表：{subscriptions}")      
   for repo in subscriptions:
     updates = github_api.fetch_updates(repo, relative=days)
-    markdown = report_generator.export_daily_progress(repo, updates, relative=days)
+    markdown = github_api.export_daily_progress(repo, updates, relative=days)
     report, report_file_path = report_generator.generate_daily_report(markdown)
     notifier.notify(repo, report)
   LOG.info(f"[定时任务执行完毕]")

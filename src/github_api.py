@@ -138,15 +138,14 @@ class GitHubAPI:
             
         return filtered
     
-    def export_repo_daily_progress(self, 
-                              repo: str,
+    def export_daily_progress(self, 
+                              repo, 
+                              updates, 
                               since: Optional[str] = None,
                               until: Optional[str] = None,
-                              relative: Optional[str] = None) -> str:
-        """导出指定仓库的进度报告，相对时间也采用since_until格式命名"""
-
-        # 解析时间范围，获取标准化的since和until
+                              relative: Optional[str] = None) -> str:      
         since, until = Utils._process_time_params(since, until, relative)
+        
         # 处理时间范围
         sinceFormat = Utils.format_date(since)
         untilFormat = Utils.format_date(until)
@@ -159,39 +158,41 @@ class GitHubAPI:
         os.makedirs(dir_path, exist_ok=True)  # 确保目录存在
         
         # 生成文件名 (统一采用since_until.md格式)
-        filename = f"{dir_path}/{sinceFormat}_{untilFormat}.md"
+        file_path = f"{dir_path}/{sinceFormat}_{untilFormat}.md"
         
-        # 获取数据
-        issues = self.fetch_issues(repo, since=since, until=until)
-        pull_requests = self.fetch_pull_requests(repo, since=since, until=until)
         
-        # 写入Markdown内容
-        with open(filename, 'w', encoding='utf-8') as f:
-            # 确定时间范围描述（保留相对时间的友好名称）
-            if relative:
-                time_desc = f"{Utils._get_relative_time_desc(relative)} ({sinceFormat} 至 {untilFormat})"
-            else:
-                time_desc = f"{sinceFormat} 至 {untilFormat}"
+        # 合并默认值和用户数据
+        safe_updates = {
+            'issues': [],
+            'pull_requests': [],
+            **updates
+        }
+        
+        try:
+            # 使用w+模式打开文件，不存在则创建，存在则覆盖
+            with open(file_path, 'w+', encoding='utf-8') as f:
+                f.write(f"# Daily Progress for {repo}\n\n")
+                f.write(f"**Report Create Date**: {Utils.format_date(datetime.now().isoformat())}\n\n")
+                f.write(f"**Report Time Range**: {sinceFormat} 至 {untilFormat}\n\n")
                 
-            # 标题和元信息
-            f.write(f"# {owner}/{repo_name} 进度报告\n\n")
-            f.write(f"**生成时间**: {Utils.format_date(datetime.now().isoformat())}\n")
-            f.write(f"**时间范围**: {time_desc}\n\n")
-            
-            # Issues部分（仅保留标题和编号）
-            f.write("## Issues\n")
-            f.write(f"共 {len(issues)} 个符合条件的Issues\n")
-            for issue in issues[:20]:
-                f.write(f"- #{issue['number']}: {issue['title']}\n")
-            
-            # Pull Requests部分（仅保留标题和编号）
-            f.write("\n## Pull Requests\n")
-            f.write(f"共 {len(pull_requests)} 个符合条件的PRs\n")
-            for pr in pull_requests[:20]:
-                f.write(f"- #{pr['number']}: {pr['title']}\n")
+                # 处理各部分内容的通用函数
+                def write_section(title, items):
+                    f.write(f"## {title}\n")
+                    if items:
+                        f.write('\n'.join(f"-  {item['title']} #{item['number']}" for item in items) + '\n\n')
+                    else:
+                        f.write(f"No {title.lower()} recorded.\n\n")
+                
+                # 依次写入各部分
+                write_section("Issues", safe_updates['issues'])
+                write_section("Pull Requests", safe_updates['pull_requests'])
+            LOG.info(f"已导出日报至 {file_path}")
+            return file_path
+        
+        except IOError as e:
+            LOG.error(f"导出日报至 {file_path} 失败")
+            raise Exception(f"Failed to write daily progress file: {str(e)}") from e
 
-        LOG.info(f"已导出进度报告至 {filename}")
-        return filename
 
     
     

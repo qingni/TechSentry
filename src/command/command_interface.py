@@ -64,7 +64,7 @@ class CommandInterface:
             print(f"正在检查 {repo} 的更新...")
             updates = self.github_api.fetch_updates(repo)
             if updates:
-                markdown = self.report_generator.export_daily_progress(repo, updates)
+                markdown = self.github_api.export_daily_progress(repo, updates)
                 self.report_generator.generate_daily_report(markdown)
             else:
                 print(f"  {repo} 暂无新更新")
@@ -78,13 +78,16 @@ class CommandInterface:
             print("警告: 相对时间(relative)将优先于绝对时间(since/until)")
         
         print(f"export_daily_progress----", repo, since, until, relative)
-        self.github_api.export_repo_daily_progress(
-            repo=repo,
-            since=since,
-            until=until,
-            relative=relative
-        )
-        print(f"✓ 已导出 {repo} 的进度数据")
+        updates = self.github_api.fetch_updates(repo)
+        if updates:
+            self.github_api.export_daily_progress(
+                repo=repo,
+                updates=updates,
+                since=since,
+                until=until,
+                relative=relative
+            )
+            print(f"✓ 已导出 {repo} 的进度数据")
     
     def generate_daily_report(self, file: str):
         """生成每日报告到指定文件"""

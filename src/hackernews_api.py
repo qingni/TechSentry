@@ -93,6 +93,58 @@ class HackerNewsAPI:
         except Exception as e:
             print(f"❌ 导出失败: {str(e)}")
             return None
+            
+    def generate_daily_report(self, output_dir="hacker_news", trend_dir="tech_trend"):
+        """生成每日报告，汇总当天所有小时文件"""
+        try:
+            # 获取当天日期
+            today = datetime.now().strftime("%Y-%m-%d")
+            # 当天的小时文件目录
+            daily_dir = os.path.join(output_dir, today)
+            # 汇总目录路径
+            trend_dir_path = os.path.join(output_dir, trend_dir)
+            os.makedirs(trend_dir_path, exist_ok=True)
+            # 汇总文件路径
+            report_file_path = os.path.join(trend_dir_path, f"{today}.md")
+            
+            # 检查当天目录是否存在
+            if not os.path.exists(daily_dir):
+                print(f"❌ 当日目录不存在: {daily_dir}")
+                return None
+            
+            # 获取当天目录下所有小时文件（按时间排序）
+            hour_files = []
+            for filename in os.listdir(daily_dir):
+                if filename.endswith(".md"):
+                    # 提取小时部分
+                    hour_str = filename.split(".")[0]
+                    if hour_str.isdigit():
+                        hour_files.append((int(hour_str), filename))
+            
+            # 按小时排序
+            hour_files.sort(key=lambda x: x[0])
+            
+            # 写入汇总文件
+            with open(report_file_path, "w", encoding="utf-8") as report_file:
+                report_file.write(f"# HackerNews 每日热点汇总 {today}\n\n")
+                
+                for hour, filename in hour_files:
+                    file_path = os.path.join(daily_dir, filename)
+                    # 读取小时文件内容
+                    with open(file_path, "r", encoding="utf-8") as hour_file:
+                        content = hour_file.read()
+                    
+                    # 写入该小时的内容
+                    report_file.write(content)
+                    # 每个小时之间加一个空行
+                    report_file.write("\n")
+            
+            print(f"✅ 每日报告已生成: {report_file_path}")
+            return report_file_path
+            
+        except Exception as e:
+            print(f"❌ 生成每日报告失败: {str(e)}")
+            return None
 
 if __name__ == "__main__":
     hackerNewsAPI = HackerNewsAPI()
@@ -100,8 +152,11 @@ if __name__ == "__main__":
     
     if latest_stories:
         print(f"HackerNews 最新热点：共获取到{len(latest_stories)}条热点\n")
-        # 导出到Markdown文件
-        hackerNewsAPI.export_to_md(latest_stories)
+        # 导出到小时Markdown文件
+        export_path = hackerNewsAPI.export_hours_hack_news(latest_stories)
+        # 生成每日报告
+        if export_path:
+            hackerNewsAPI.generate_daily_report()
         for story in latest_stories:
             print(f"排名: {story['rank']}")
             print(f"标题: {story['title']}")

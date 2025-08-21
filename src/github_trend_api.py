@@ -65,7 +65,7 @@ class GithubTrendAPI:
           print(f"请求失败：{str(e)}")
           return []
 
-  def export_daily_github_trend(self, repos: list[dict], directory: str = "github_trend"):
+  def generate_daily_github_trend(self, repos: list[dict], directory: str = "github_trend"):
       """
       将仓库列表导出到Markdown文件
       :param repos: 仓库列表数据
@@ -106,8 +106,8 @@ if __name__ == "__main__":
             print(f"star: {story['star']}")
             print(f"fork: {story['fork']}")
             print(f"语言: {story['language']}")
-            print("-" * 80)     
+            print("-" * 80)
       # 导出到Markdown文件
-      githubTrendAPI.export_daily_github_trend(trending_repos)
+      githubTrendAPI.generate_daily_github_trend(trending_repos)
     else:
         print("未爬取到任何仓库数据")
