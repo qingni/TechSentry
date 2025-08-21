@@ -53,6 +53,37 @@ def default_model_list(model_type):
       model_choices = ["gpt-oss:20b", "deepseek-r1:8b", "qwen3:8b"]
   return model_choices
 
+def add_github_subscription(repo, current_subscriptions):
+  """添加GitHub仓库到订阅列表"""
+    # 简单验证输入格式
+  if repo and "/" in repo:
+    # 确保没有重复添加
+    if repo not in current_subscriptions:
+      # 添加新仓库到列表
+      repo = repo.replace(" ", "")
+      subscription_manager.add_subscription(repo)
+      
+    available_repos = gr.Dropdown(
+      subscription_manager.get_subscriptions(), 
+      label="已订阅GitHub项目",
+      value=repo # 新添加的repo设置为默认值
+    )
+    return available_repos, "", available_repos
+  else:
+    # 格式不正确，返回原始列表和错误提示
+    return current_subscriptions, "格式错误！请使用 owner/repo 格式"
+
+def remove_github_subscription(repo):
+  """添加GitHub仓库到订阅列表"""
+  subscription_manager.remove_subscription(repo)
+  subscription_list = subscription_manager.get_subscriptions()
+  available_repos = gr.Dropdown(
+    subscription_list, 
+    label="已订阅GitHub项目",
+    value=subscription_list[0]
+  )
+  return available_repos, available_repos
+  
 # 创建模型选择UI的公共函数
 def create_model_selection():
     """
@@ -97,7 +128,57 @@ def create_report_section(generate_func, inputs=[]):
     
     return button, markdown_output, file_output
       
-with gr.Blocks(title="GitHubArgus") as demo:
+with gr.Blocks(title="GitHubArgus", css="""
+    /* 按钮公共样式 - 提取重复属性 */
+    .custom-button {
+        border: none !important;
+        padding: 8px 16px !important;
+        border-radius: 4px !important;
+        font-weight: 500 !important;
+        transition: background-color 0.3s ease !important;
+        cursor: pointer !important;
+    }
+    
+    /* 添加按钮样式 */
+    .add-button {
+        background-color: #4CAF50 !important; /* 绿色 */
+        color: white !important;
+    }
+    
+    /* 删除按钮样式 */
+    .delete-button {
+        background-color: #f44336 !important; /* 红色 */
+        color: white !important;
+    }
+    
+    /* 悬停效果 */
+    .add-button:hover {
+        background-color: #45a049 !important; /* 深一点的绿色 */
+    }
+    
+    .delete-button:hover {
+        background-color: #d32f2f !important; /* 深一点的红色 */
+    }
+    
+    /* 激活效果（点击时） */
+    .add-button:active {
+        background-color: #3d8b40 !important;
+    }
+    
+    .delete-button:active {
+        background-color: #b71c1c !important;
+    }
+    
+    /* 文本框样式优化 */
+    .gr-textbox {
+        border-radius: 4px !important;
+    }
+    
+    /* 下拉框样式优化 */
+    .gr-dropdown {
+        border-radius: 4px !important;
+    }
+""") as demo:
   # GitHub项目进展Tab
   with gr.Tab("GitHub 项目进展"):
     gr.Markdown("## GitHub 项目进展")
@@ -108,9 +189,9 @@ with gr.Blocks(title="GitHubArgus") as demo:
     # 创建订阅列表和时间周期选择
     subscription_list = gr.Dropdown(
         subscription_manager.get_subscriptions(), 
-        label="订阅列表", 
-        info="已订阅GitHub项目"
+        label="已订阅GitHub项目",
     )
+                
     relative = gr.Dropdown(
         Utils.get_all_relative_time_descriptions(), 
         label="时间周期", 
@@ -122,7 +203,29 @@ with gr.Blocks(title="GitHubArgus") as demo:
         generate_github_report,
         inputs=[subscription_list, relative]
     )
-  
+    
+    with gr.Accordion("管理GitHub订阅仓库", open=False):
+        gr.Markdown("在这里添加或删除你想要订阅的GitHub仓库")
+        
+        with gr.Row():
+            with gr.Column(scale=1):
+                repo_input = gr.Textbox(
+                    label="输入要订阅的仓库", 
+                    placeholder="格式：owner/repo",
+                    elem_classes=["repo-input"]
+                )
+                add_btn = gr.Button("添加仓库", elem_classes=["custom-button", "add-button"])
+            
+            with gr.Column(scale=1):
+                delete_list = gr.Dropdown(
+                    subscription_manager.get_subscriptions(), 
+                    label="已订阅的GitHub项目",
+                    interactive=True
+                )
+                delete_btn = gr.Button("删除仓库", elem_classes=["custom-button", "delete-button"])
+                
+            add_btn.click(fn=add_github_subscription, inputs=[repo_input, subscription_list], outputs=[subscription_list, repo_input, delete_list])
+            delete_btn.click(fn=remove_github_subscription, inputs=[delete_list], outputs=[delete_list, subscription_list])
   # Hacker News热点Tab
   with gr.Tab("Hacker News热点"):
     gr.Markdown("## Hacker News热点")
