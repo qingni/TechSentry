@@ -1,5 +1,4 @@
 [
-    "moeru-ai/airi",
     "ollama/ollama",
     "langchain-ai/langchain"
 ]

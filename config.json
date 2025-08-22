@@ -4,7 +4,6 @@
       "smtp_server": "smtp.gmail.com",
       "smtp_port": 587,
       "email_from": "Lq15301353696@gmail.com",
-      "email_from_password": "fcku fmjm duis bcnh",
       "email_to": "qinglili@tencent.com"
     },
     "wx_webhook_url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=a812348c-0257-4496-a9ba-cf06bd797564"
