@@ -112,37 +112,54 @@ class HackerNewsAPI:
                 print(f"❌ 当日目录不存在: {daily_dir}")
                 return None
             
-            # 获取当天目录下所有小时文件（按时间排序），排除带_report的文件
+            # 获取并处理小时文件
             hour_files = []
             for filename in os.listdir(daily_dir):
-                # 检查文件扩展名且不包含_report
-                if filename.endswith(".md") and "_report" not in filename:
-                    # 提取小时部分（更安全的方式）
-                    base_name = os.path.splitext(filename)[0]
+                if filename.endswith("_report.md"):
+                    base_name = filename.replace("_report.md", "")
                     if base_name.isdigit():
                         hour_files.append((int(base_name), filename))
             
-            LOG.info(f"找到 {len(hour_files)} 个小时文件: {hour_files}")
+            if not hour_files:
+                LOG.warning(f"⚠️ 未找到有效的小时报告文件")
+                return None
+            
             # 按小时排序
             hour_files.sort(key=lambda x: x[0])
+            LOG.info(f"找到 {len(hour_files)} 个有效小时文件，将按时间顺序处理：{hour_files}")
             
-            # 写入汇总文件
-            with open(report_file_path, "w", encoding="utf-8") as report_file:
-                report_file.write(f"# HackerNews 每日热点汇总 {today}\n\n")
-                
-                for hour, filename in hour_files:
-                    file_path = os.path.join(daily_dir, filename)
-                    # 读取小时文件内容
-                    with open(file_path, "r", encoding="utf-8") as hour_file:
-                        content = hour_file.read()
+            # 生成汇总报告
+            try:
+                with open(report_file_path, "w", encoding="utf-8") as report_file:
+                    report_file.write(f"# HackerNews 每日热点汇总 {today}\n\n")
                     
-                    # 写入该小时的内容
-                    report_file.write(content)
-                    # 每个小时之间加一个空行
-                    report_file.write("\n")
-            
-            LOG.info(f"✅ 每日报告已生成: {report_file_path}")
-            return report_file_path
+                    processed_count = 0
+                    for hour, filename in hour_files:
+                        file_path = os.path.join(daily_dir, filename)
+                        
+                        if not os.path.exists(file_path):
+                            LOG.warning(f"文件不存在，跳过: {file_path}")
+                            continue
+                        
+                        try:
+                            with open(file_path, "r", encoding="utf-8") as hour_file:
+                                content = hour_file.read()
+                            
+                            report_file.write(f"## {hour}:00 热点\n\n")
+                            report_file.write(content)
+                            report_file.write("\n")
+                            processed_count += 1
+                        except Exception as e:
+                            LOG.error(f"处理文件 {file_path} 时出错: {str(e)}")
+                    
+                    LOG.info(f"成功处理 {processed_count}/{len(hour_files)} 个文件")
+                
+                LOG.info(f"✅ 每日报告已生成: {report_file_path}")
+                return report_file_path
+                
+            except Exception as e:
+                LOG.error(f"❌ 生成每日报告失败: {str(e)}")
+                return None
             
         except Exception as e:
             LOG.error(f"❌ 生成每日报告失败: {str(e)}")
