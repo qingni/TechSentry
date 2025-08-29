@@ -244,7 +244,8 @@ def main():
         'cron',
         hour=0,
         minute=0,
-        args=[clean_reports]  # 传递参数
+        args=[clean_reports],  # 传递参数
+        timezone='Asia/Shanghai'
     )
 
     # 2. API统计定时任务（每天00:00）
@@ -252,21 +253,29 @@ def main():
         record_api_stats,
         'cron',
         hour=0,
-        minute=0
+        minute=0,
+        timezone='Asia/Shanghai'
     )
 
     # 3. GitHub相关任务（每隔config.update_freq_days天，在指定时间执行）
     # github_job(github_api, subscription_manager, report_generator, notifier, config.update_freq_days)
+    
+    # 解析配置中的时间和间隔天数
+    hour, minute = map(int, config.update_execution_time.split(':'))
+    interval_days = config.update_freq_days  # 从配置获取间隔天数（例如1天）
+
+    # 添加定时任务，每隔interval_days天的指定时间执行
     scheduler.add_job(
         github_job,
-        'interval',
-        days=config.update_freq_days,
-        start_date=datetime.now().replace(
-            hour=int(config.update_execution_time.split(':')[0]),
-            minute=int(config.update_execution_time.split(':')[1]),
-            second=0
-        ),
-        args=[github_api, subscription_manager, report_generator, notifier, config.update_freq_days]
+        'cron',
+        # 每隔interval_days天，在指定的时分秒执行
+        day=f"*/{interval_days}",  # 关键配置：每隔N天
+        hour=hour,
+        minute=minute,
+        second=0,
+        args=[github_api, subscription_manager, report_generator, notifier, interval_days],
+        misfire_grace_time=600,  # 允许10分钟的延迟缓冲
+        timezone='Asia/Shanghai'  # 显式指定时区，避免时区问题导致的时间偏差
     )
 
     # 4. HackNews小时级任务（每4小时，在整点执行）
@@ -276,7 +285,9 @@ def main():
         'cron',
         hour='*/4',  # 每4小时
         minute=0,
-        args=[hack_news_api, report_generator, notifier]
+        misfire_grace_time=300,  # 允许5分钟的延迟
+        args=[hack_news_api, report_generator, notifier],
+        timezone='Asia/Shanghai'
     )
 
     # 5. HackNews每日任务（每天20:00）
@@ -286,7 +297,8 @@ def main():
         'cron',
         hour=20,
         minute=0,
-        args=[hack_news_api, report_generator, notifier]
+        args=[hack_news_api, report_generator, notifier],
+        timezone='Asia/Shanghai'
     )
 
     # 6. GitHub趋势每日任务（每天18:00）
@@ -296,13 +308,15 @@ def main():
         'cron',
         hour=18,
         minute=0,
-        args=[github_trend_api, report_generator, notifier]
+        args=[github_trend_api, report_generator, notifier],
+        timezone='Asia/Shanghai'
     )
     # 7. 资源监控任务（每分钟执行）
     scheduler.add_job(
         monitor_resources,
         'interval',
-        minutes=1
+        minutes=1,
+        timezone='Asia/Shanghai'
     )
     # 8.添加资源平均值计算任务（每月1号执行）
     scheduler.add_job(
@@ -310,7 +324,8 @@ def main():
       'cron',
       day=1,  # 每月1号
       hour=0,
-      minute=5
+      minute=5,
+      timezone='Asia/Shanghai'
     )
     
     # --------------------------
