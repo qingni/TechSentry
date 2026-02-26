@@ -1,7 +1,7 @@
-# GitHubArgus - 智能开发监控助手
+# TechSentry - 智能开发监控助手
 
 ## 目录
-- [GitHubArgus - 智能开发监控助手](#githubargus---智能开发监控助手)
+- [TechSentry - 智能开发监控助手](#techsentry---智能开发监控助手)
   - [目录](#目录)
     - [关键成果：](#关键成果)
     - [量化数据评判标准：](#量化数据评判标准)
@@ -27,7 +27,7 @@
   - [项目结构](#项目结构)
   - [许可证](#许可证)
 
-GitHubArgus是一个自动化监控工具，用于跟踪GitHub仓库更新、HackerNews热点和GitHub趋势项目，并生成每日报告。
+TechSentry是一个自动化监控工具，用于跟踪GitHub仓库更新、HackerNews热点和GitHub趋势项目，并生成每日报告。
 
 ### 关键成果：
 - 解决开发者信息过载问题，用户日均节省技术追踪时间2.5小时
@@ -59,8 +59,8 @@ GitHubArgus是一个自动化监控工具，用于跟踪GitHub仓库更新、Hac
 
 1. 克隆仓库：
 ```bash
-git clone https://github.com/yourusername/GitHubArgus.git
-cd GitHubArgus
+git clone https://github.com/yourusername/TechSentry.git
+cd TechSentry
 ```
 
 2. 安装依赖：

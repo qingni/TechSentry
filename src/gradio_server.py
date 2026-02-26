@@ -128,7 +128,7 @@ def create_report_section(generate_func, inputs=[]):
     
     return button, markdown_output, file_output
       
-with gr.Blocks(title="GitHubArgus", css="""
+with gr.Blocks(title="TechSentry", css="""
     /* 按钮公共样式 - 提取重复属性 */
     .custom-button {
         border: none !important;

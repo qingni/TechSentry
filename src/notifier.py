@@ -120,7 +120,7 @@ if __name__ == "__main__":
     from config import Config
     config = Config()
     notifier = Notifier(config.notification_settings)
-    test_repo = "qingni/GitHubArgus"
+    test_repo = "qingni/TechSentry"
     test_report = "Test report content"
     notifier.notify_github(test_repo, test_report)
     

@@ -312,21 +312,21 @@ def main():
         timezone='Asia/Shanghai'
     )
     # 7. 资源监控任务（每分钟执行）
-    scheduler.add_job(
-        monitor_resources,
-        'interval',
-        minutes=1,
-        timezone='Asia/Shanghai'
-    )
+    # scheduler.add_job(
+    #     monitor_resources,
+    #     'interval',
+    #     minutes=1,
+    #     timezone='Asia/Shanghai'
+    # )
     # 8.添加资源平均值计算任务（每月1号执行）
-    scheduler.add_job(
-      calculate_resource_avg,
-      'cron',
-      day=1,  # 每月1号
-      hour=0,
-      minute=5,
-      timezone='Asia/Shanghai'
-    )
+    # scheduler.add_job(
+    #   calculate_resource_avg,
+    #   'cron',
+    #   day=1,  # 每月1号
+    #   hour=0,
+    #   minute=5,
+    #   timezone='Asia/Shanghai'
+    # )
     
     # --------------------------
     # 主循环
