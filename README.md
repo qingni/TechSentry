@@ -30,18 +30,46 @@
 TechSentry是一个自动化监控工具，用于跟踪GitHub仓库更新、HackerNews热点和GitHub趋势项目，并生成每日报告。
 
 ### 关键成果：
-- 解决开发者信息过载问题，用户日均节省技术追踪时间2.5小时
-- 智能报告准确率92%（基于1000+样本测试）
-- 系统支持7×24小时运行，平均无故障时间>2000小时
-- 资源利用率优化：CPU占用<5%（基于psutil模块15天监控数据，存储在`logs/resource_stats.log`）
-- 定时任务精度±1分钟（分析500次任务执行的APScheduler事件日志，存储在`logs/task_deviation.log`）
+- 已建立**可审计、可复现**的指标链路，核心统计按日落盘，支持持续追踪与回溯
+- 调度系统采用统一时区（`Asia/Shanghai`），并通过事件监听统计任务执行质量
+- 三类数据源（GitHub/HackerNews/GitHub Trend）已接入统一健康度口径（采集、报告、通知）
+- 关键指标从“宣传性数字”切换为“运行期实测数据”，避免口径漂移
 
 ### 量化数据评判标准：
-1. **日均处理数据量5000+条**：通过守护进程中的API计数器统计，每日0点记录到`logs/api_stats.log`
-2. **AI报告准确率92%**：基于1000份样本的人工评估
-3. **定时任务精度±1分钟**：使用APScheduler的BackgroundScheduler，分析500次任务执行的APScheduler事件日志（存储在`logs/task_deviation.log`），计算平均时间偏差
-4. **资源利用率指标**：使用psutil模块每分钟采集数据，15天内存/CPU监控均值存储在`logs/resource_stats.log`
-5. **系统稳定性99.9%**：基于运行日志中的异常事件统计
+1. **任务成功率（Success Rate）**
+   - 定义：`success_runs / total_runs`
+   - 采集方式：APScheduler执行事件（成功/失败）
+   - 存储位置：`logs/job_kpi.log`
+   - 建议目标：`>= 99.0%`
+2. **任务准点率（On-time Rate）**
+   - 定义：`|实际触发时间 - 计划触发时间| <= 60秒` 的执行占比
+   - 采集方式：APScheduler计划时间与实际时间偏差
+   - 存储位置：`logs/job_kpi.log`
+   - 建议目标：`>= 98.0%`
+3. **任务耗时P95（P95 Duration）**
+   - 定义：单次任务执行耗时的P95分位数
+   - 采集方式：任务提交/执行事件的耗时差
+   - 存储位置：`logs/job_kpi.log`
+   - 建议目标：按任务类型分别设定阈值并持续收敛
+4. **采集成功率（Collection Success Rate）**
+   - 定义：`success / attempts`
+   - 采集范围：`github`、`hackernews`、`github_trend`
+   - 存储位置：`logs/source_health.log`
+   - 建议目标：`>= 97.0%`
+5. **报告生成成功率（Report Success Rate）**
+   - 定义：`report_success / (report_success + report_failure)`
+   - 存储位置：`logs/source_health.log`
+   - 建议目标：`>= 99.0%`
+6. **通知发送成功率（Notify Success Rate）**
+   - 定义：`notify_success / (notify_success + notify_failure)`
+   - 存储位置：`logs/source_health.log`
+   - 建议目标：`>= 99.0%`
+7. **数据新鲜度（Data Freshness）**
+   - 定义：当前时间与数据源最近一次成功采集时间的分钟差
+   - 存储位置：`logs/source_health.log`
+   - 建议目标：不超过各数据源调度周期的`1.5`倍
+
+> 说明：上述指标以运行期真实数据为准。建议先连续运行7天形成基线，再将“建议目标”调整为“当前值+改进目标”。
 
 ## 核心功能
 
@@ -72,21 +100,12 @@ pip install -r requirements.txt
 在`config.json`填写您的配置：
 ```json
 {
-  "notification_settings": {
-    "email": {
-      "smtp_server": "smtp.gmail.com",
-      "smtp_port": 587,
-      "email_from": "xx",
-      "email_to": "xx"
-    },
-    "wx_webhook_url": "xxx"
-  },
   "subscriptions_file": "subscriptions.json",
   "update_frequency_days": 1,
-  "update_execution_time": "08:00",
+  "update_execution_time": "17:00",
   "llm": {
-    "model_type": "ollama",
-    "openai_model_name": "gpt-4o-mini",
+    "model_type": "openai",
+    "openai_model_name": "gpt-5-mini",
     "ollama_model_name": "gpt-oss:20b",
     "ollama_api_url": "http://localhost:11434/v1"
   },
@@ -107,6 +126,10 @@ export GITHUB_TOKEN="xxx"
 export OPENAI_API_KEY="xxx"
 # gmail邮箱专用密码
 export GMAIL_SPECIAL_PASSWORD="xxx"
+# LLM API Token (可选，用于覆盖默认的OpenAI API Key)
+export LLM_API_TOKEN="xxx"
+# LLM Base URL (可选，用于自定义API地址)
+export LLM_BASE_URL="xxx"
 ```
 
 ## 使用说明
@@ -247,7 +270,7 @@ export <repo> [since] [until] [relative]
   说明:
     时间参数优先级: relative > since/until，不指定则默认今天
   示例:
-    export --repo=langchain-ai/langchain --relative=7d       # 过去7天
+    export --repo=langchain-ai/langchain --since="" --until="" --relative=7d       # 过去7天
 ```
 
 #### 生成每日报告
