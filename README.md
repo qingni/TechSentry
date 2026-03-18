@@ -130,6 +130,13 @@ export GMAIL_SPECIAL_PASSWORD="xxx"
 export LLM_API_TOKEN="xxx"
 # LLM Base URL (可选，用于自定义API地址)
 export LLM_BASE_URL="xxx"
+# 邮件通知配置 (可选)
+export EMAIL_SMTP_SERVER="smtp.gmail.com"
+export EMAIL_SMTP_PORT="587"
+export EMAIL_FROM="xxx"
+export EMAIL_TO="xxx"
+# 企微机器人通知配置 (可选)
+export WX_WEBHOOK_URL="xxx"
 ```
 
 ## 使用说明
