@@ -665,78 +665,78 @@ def main():
     )
 
     # 4. GitHub相关任务（每隔config.update_freq_days天，在指定时间执行）
-    github_job(github_api, subscription_manager, report_generator, notifier, config.update_freq_days)
+    # github_job(github_api, subscription_manager, report_generator, notifier, config.update_freq_days)
 
     # 解析并校验配置中的时间和间隔天数
-    # hour, minute = parse_update_execution_time(config.update_execution_time)
-    # interval_days = int(config.update_freq_days)
-    # if interval_days <= 0:
-    #     raise ValueError(f"update_freq_days必须为正整数，当前值: {config.update_freq_days}")
+    hour, minute = parse_update_execution_time(config.update_execution_time)
+    interval_days = int(config.update_freq_days)
+    if interval_days <= 0:
+        raise ValueError(f"update_freq_days必须为正整数，当前值: {config.update_freq_days}")
 
-    # github_start_date = build_interval_start_datetime(hour, minute)
+    github_start_date = build_interval_start_datetime(hour, minute)
 
-    # # 使用interval实现“严格每N天”语义，避免cron day步进跨月失真
-    # scheduler.add_job(
-    #     github_job,
-    #     'interval',
-    #     id='github_job',
-    #     replace_existing=True,
-    #     days=interval_days,
-    #     start_date=github_start_date,
-    #     args=[github_api, subscription_manager, report_generator, notifier, interval_days],
-    #     timezone=SHANGHAI_TZ,
-    #     misfire_grace_time=600,
-    #     max_instances=1,
-    #     coalesce=True
-    # )
+    # 使用interval实现“严格每N天”语义，避免cron day步进跨月失真
+    scheduler.add_job(
+        github_job,
+        'interval',
+        id='github_job',
+        replace_existing=True,
+        days=interval_days,
+        start_date=github_start_date,
+        args=[github_api, subscription_manager, report_generator, notifier, interval_days],
+        timezone=SHANGHAI_TZ,
+        misfire_grace_time=600,
+        max_instances=1,
+        coalesce=True
+    )
 
     # 4. HackNews小时级任务（每4小时，在第10分钟执行，避免与整点任务撞车）
-    hack_news_hours_job(hack_news_api, report_generator, notifier)
-    # scheduler.add_job(
-    #     hack_news_hours_job,
-    #     'cron',
-    #     id='hack_news_hours_job',
-    #     replace_existing=True,
-    #     hour='*/4',  # 每4小时
-    #     minute=10,
-    #     misfire_grace_time=300,  # 允许5分钟的延迟
-    #     args=[hack_news_api, report_generator, notifier],
-    #     timezone=SHANGHAI_TZ,
-    #     max_instances=1,
-    #     coalesce=True
-    # )
+    # hack_news_hours_job(hack_news_api, report_generator, notifier)
+    scheduler.add_job(
+        hack_news_hours_job,
+        'cron',
+        id='hack_news_hours_job',
+        replace_existing=True,
+        hour='*/4',  # 每4小时
+        minute=10,
+        misfire_grace_time=300,  # 允许5分钟的延迟
+        args=[hack_news_api, report_generator, notifier],
+        timezone=SHANGHAI_TZ,
+        max_instances=1,
+        coalesce=True
+    )
 
     # 5. HackNews每日任务（每天20:30）
-    hack_news_daily_job(hack_news_api, report_generator, notifier)
-    # scheduler.add_job(
-    #     hack_news_daily_job,
-    #     'cron',
-    #     id='hack_news_daily_job',
-    #     replace_existing=True,
-    #     hour=20,
-    #     minute=30,
-    #     args=[hack_news_api, report_generator, notifier],
-    #     timezone=SHANGHAI_TZ,
-    #     misfire_grace_time=600,
-    #     max_instances=1,
-    #     coalesce=True
-    # )
+    # hack_news_daily_job(hack_news_api, report_generator, notifier)
+    scheduler.add_job(
+        hack_news_daily_job,
+        'cron',
+        id='hack_news_daily_job',
+        replace_existing=True,
+        hour=20,
+        minute=30,
+        args=[hack_news_api, report_generator, notifier],
+        timezone=SHANGHAI_TZ,
+        misfire_grace_time=600,
+        max_instances=1,
+        coalesce=True
+    )
 
     # 6. GitHub趋势每日任务（每天18:00）
-    github_trend_daily_job(github_trend_api, report_generator, notifier)
-    # scheduler.add_job(
-    #     github_trend_daily_job,
-    #     'cron',
-    #     id='github_trend_daily_job',
-    #     replace_existing=True,
-    #     hour=18,
-    #     minute=0,
-    #     args=[github_trend_api, report_generator, notifier],
-    #     timezone=SHANGHAI_TZ,
-    #     misfire_grace_time=600,
-    #     max_instances=1,
-    #     coalesce=True
-    # )
+    # github_trend_daily_job(github_trend_api, report_generator, notifier)
+    scheduler.add_job(
+        github_trend_daily_job,
+        'cron',
+        id='github_trend_daily_job',
+        replace_existing=True,
+        hour=18,
+        minute=0,
+        args=[github_trend_api, report_generator, notifier],
+        timezone=SHANGHAI_TZ,
+        misfire_grace_time=600,
+        max_instances=1,
+        coalesce=True
+    )
     
     # --------------------------
     # 主循环
