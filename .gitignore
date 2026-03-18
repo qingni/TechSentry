@@ -206,6 +206,18 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
+# Gradio 缓存目录（含证书等敏感文件）
+.gradio/
+
+# 本地调试用的 Jupyter Notebook
+jupyter/
+
+# IDE 插件配置目录
+.codebuddy/
+
+# OpenSpec 工作流配置目录
+openspec/
+
 # 运行时生成的报告目录
 daily_progress/
 github_trend/

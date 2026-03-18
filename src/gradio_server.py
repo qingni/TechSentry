@@ -26,12 +26,18 @@ def generate_github_report(repo, relative):
 
 def generate_hacker_news_report():
   markdown_file_path = hack_news_api.generate_daily_report()
+  if markdown_file_path is None:
+    return "❌ 生成Hacker News报告失败：当日数据目录不存在或没有有效的小时报告文件，请先运行数据采集任务。", None
   report, report_file_path = report_generator.generate_hack_news_daily_report(markdown_file_path)
   return report, report_file_path
 
 def generate_github_trend_report():
   repos = github_trend_api.get_github_trending()
+  if not repos:
+    return "❌ 生成GitHub Trend报告失败：无法获取GitHub趋势数据，请检查网络连接。", None
   markdown_file_path = github_trend_api.generate_daily_github_trend(repos)
+  if markdown_file_path is None:
+    return "❌ 生成GitHub Trend报告失败：无法生成趋势数据文件。", None
   report, report_file_path = report_generator.generate_github_trend_daily_report(markdown_file_path)
   return report, report_file_path
 
@@ -48,7 +54,7 @@ def update_model_list(model_type):
     )
 
 def default_model_list(model_type):
-  model_choices = ["gpt-4o-mini", "gpt-3.5-turbo"]
+  model_choices = ["gpt-5-mini", "gpt-5"]
   if model_type == "ollama":
       model_choices = ["gpt-oss:20b", "deepseek-r1:8b", "qwen3:8b"]
   return model_choices
@@ -252,4 +258,4 @@ with gr.Blocks(title="TechSentry", css="""
   
 
 if __name__ == "__main__":
-    demo.launch(share=False, debug=True)
+    demo.launch(server_name="0.0.0.0", share=False, debug=True)

@@ -1,6 +1,10 @@
 from datetime import datetime, timedelta
 from typing import Optional, Tuple
+from zoneinfo import ZoneInfo
 from logger import LOG
+
+SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
+
 class Utils:
     # 统一的时间定义数据结构
     relative_time_options = {
@@ -25,29 +29,29 @@ class Utils:
     @classmethod
     def _process_time_params(cls, since: Optional[str], until: Optional[str], 
                         relative: str | int | None) -> Tuple[Optional[str], Optional[str]]:
-        """处理时间参数，相对时间优先级高于绝对时间，默认使用今天的日期"""
-        # 获取当前UTC时间（带时区信息）
-        current_utc = datetime.now()
+        """处理时间参数，相对时间优先级高于绝对时间，默认使用今天的日期（上海时区）"""
+        # 获取当前上海时间，并保持与历史行为一致的无时区ISO字符串格式
+        current_time = datetime.now(SHANGHAI_TZ).replace(tzinfo=None)
         
         # 处理相对时间（优先级最高）
         if relative:
-            until_dt = current_utc
+            until_dt = current_time
             
             if relative in cls.relative_time_options:
                 since_dt = until_dt - cls.relative_time_options[relative]['delta']
             
             elif isinstance(relative, int):
                 # 处理整数（如 relative=3 表示 3 天）
-                since_dt = current_utc - timedelta(days=relative)
+                since_dt = current_time - timedelta(days=relative)
             elif isinstance(relative, str):
                 try:
                     days_int = int(relative)
                 except ValueError:
                     LOG.error(f"错误：'{relative}' 不是有效整数！")
                     days_int = 1
-                since_dt = current_utc - timedelta(days=days_int)
+                since_dt = current_time - timedelta(days=days_int)
                 
-            # 转换为ISO格式并添加'Z'表示UTC时间
+            # 转换为ISO格式
             since = since_dt.isoformat()
             until = until_dt.isoformat()
         
@@ -55,7 +59,7 @@ class Utils:
         else:
             # 两者都为空：当前时间为结束，往前推一天为开始
             if not since and not until:
-                until_dt = current_utc
+                until_dt = current_time
                 since_dt = until_dt - timedelta(days=1)
                 since = since_dt.isoformat()
                 until = until_dt.isoformat()

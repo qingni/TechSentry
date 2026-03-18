@@ -1,9 +1,13 @@
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from typing import List, Optional, Dict, Tuple
 import os
 from utils import Utils
 from logger import LOG
+
+SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
+
 class GitHubAPI:
     """增强版GitHub API客户端，支持相对时间范围和状态筛选"""
 
@@ -172,7 +176,7 @@ class GitHubAPI:
             # 使用w+模式打开文件，不存在则创建，存在则覆盖
             with open(file_path, 'w+', encoding='utf-8') as f:
                 f.write(f"# Daily Progress for {repo}\n\n")
-                f.write(f"**Report Create Date**: {Utils.format_date(datetime.now().isoformat())}\n\n")
+                f.write(f"**Report Create Date**: {Utils.format_date(datetime.now(SHANGHAI_TZ).replace(tzinfo=None).isoformat())}\n\n")
                 f.write(f"**Report Time Range**: {sinceFormat} 至 {untilFormat}\n\n")
                 
                 # 处理各部分内容的通用函数

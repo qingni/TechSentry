@@ -1,7 +1,13 @@
 import os 
+from pathlib import Path
+from dotenv import load_dotenv
 from logger import LOG
 from openai import OpenAI
 from config import Config
+
+# 加载项目根目录下的 .env 文件
+load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env", override=True)
+
 class LLM:
     def __init__(self, config):
         """初始化LLM类
@@ -11,8 +17,14 @@ class LLM:
         """
         self.config = config
         self.model_type = config.llm_model_type.lower()
+        self.api_token = os.getenv("LLM_API_TOKEN")
+        self.base_url = os.getenv("LLM_BASE_URL")
+
         if self.model_type == "openai":
-            self.client = OpenAI()
+            self.client = OpenAI(
+                api_key=self.api_token,
+                base_url=self.base_url,
+            )
         elif self.model_type == "ollama":
             self.client = OpenAI(
                 base_url=self.get_ollama_base_url(),  # 自动适应容器环境
@@ -84,7 +96,7 @@ class LLM:
         LOG.info("Starting report generation in GPT mode.")
         try:
             response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model=self.config.openai_model_name,
                 messages=messages
             )
             LOG.debug("GPT response: {}", response)

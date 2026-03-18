@@ -10,7 +10,7 @@ def main():
     
     while True:
         try:
-            user_input = input("GitHub Argus> ").strip()
+            user_input = input("Tech Sentry> ").strip()
             if not user_input:
                 continue
                 

@@ -1,19 +1,10 @@
 {
-  "notification_settings": {
-    "email": {
-      "smtp_server": "smtp.gmail.com",
-      "smtp_port": 587,
-      "email_from": "Lq15301353696@gmail.com",
-      "email_to": "qinglili@tencent.com"
-    },
-    "wx_webhook_url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=a812348c-0257-4496-a9ba-cf06bd797564"
-  },
   "subscriptions_file": "subscriptions.json",
   "update_frequency_days": 1,
-  "update_execution_time": "14:30",
+  "update_execution_time": "17:00",
   "llm": {
-    "model_type": "ollama",
-    "openai_model_name": "gpt-4o-mini",
+    "model_type": "openai",
+    "openai_model_name": "gpt-5-mini",
     "ollama_model_name": "gpt-oss:20b",
     "ollama_api_url": "http://localhost:11434/v1"
   },

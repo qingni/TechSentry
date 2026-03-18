@@ -15,7 +15,7 @@ class CommandParser:
         
         # 创建主解析器
         self.parser = argparse.ArgumentParser(
-            description='GitHub Argus 命令行工具',
+            description='Tech Sentry 命令行工具',
             add_help=False,
             allow_abbrev=False
         )

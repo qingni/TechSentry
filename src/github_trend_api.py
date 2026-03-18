@@ -2,7 +2,11 @@ import requests
 from bs4 import BeautifulSoup
 import os
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from logger import LOG
+
+SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
+
 class GithubTrendAPI:
   def __init__(self):
     self.headers = {
@@ -30,11 +34,11 @@ class GithubTrendAPI:
               repo_name_elem = repo.find("h2", class_="h3 lh-condensed")
               repo_name = repo_name_elem.get_text(strip=True).replace(" ", "").replace("\n", "") if repo_name_elem else "未知名称"
 
-              # 调整：通过更精确的选择器获取仓库说明
-              repo_desc_elem = repo.find("p", class_="col-9 color-fg-muted my-1 pr-4")
+              # 通过多种方式尝试获取仓库说明，兼容GitHub页面布局变更
+              repo_desc_elem = repo.find("p", class_=lambda c: c and "color-fg-muted" in c and "my-1" in c)
               repo_desc = repo_desc_elem.get_text(strip=True) if repo_desc_elem else "无说明"
 
-              lang_elem = repo.find("span", class_="d-inline-block ml-0 mr-3")
+              lang_elem = repo.find("span", class_=lambda c: c and "d-inline-block" in c and "ml-0" in c)
               repo_lang = lang_elem.get_text(strip=True) if lang_elem else "无"
 
               stats_elem = repo.find("div", class_="f6 color-fg-muted mt-2")
@@ -74,8 +78,8 @@ class GithubTrendAPI:
       if not os.path.exists(directory):
           os.makedirs(directory)
       
-      # 生成文件名
-      today = datetime.now().strftime("%Y-%m-%d")
+      # 生成文件名（上海时区）
+      today = datetime.now(SHANGHAI_TZ).strftime("%Y-%m-%d")
       file_path = os.path.join(directory, f"{today}.md")
       
       # 写入Markdown内容

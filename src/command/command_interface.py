@@ -91,13 +91,13 @@ class CommandInterface:
     
     def generate_daily_report(self, file: str):
         """生成每日报告到指定文件"""
-        self.report_generator.generate_github_daily_report(file_path=file)
+        self.report_generator.generate_github_daily_report(file)
         print(f"✓ 每日报告已生成至: {file}")
 
     def print_help(self):
         """显示帮助信息"""
         help_text = """
-GitHub Argus 命令行工具
+Tech Sentry 命令行工具
 
 可用命令:
   add <repo>                  添加订阅
@@ -145,7 +145,7 @@ GitHub Argus 命令行工具
     
     def exit_tool(self):
         """退出工具"""
-        print("正在退出 GitHub Argus...")
+        print("正在退出 Tech Sentry...")
         print("✓ 已安全退出")
         exit(0)
     

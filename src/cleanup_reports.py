@@ -11,15 +11,18 @@
 import os
 import shutil
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from logger import LOG
+
+SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
 
 class CleanReportsDir:
     def __init__(self):
         pass
     
     def get_today_date(self):
-        """获取当天日期字符串"""
-        return datetime.now().strftime("%Y-%m-%d")
+        """获取当天日期字符串（上海时区）"""
+        return datetime.now(SHANGHAI_TZ).strftime("%Y-%m-%d")
 
 
     def cleanup_directory(self, directory_path, date_str, is_dir=False, is_time_range=False):

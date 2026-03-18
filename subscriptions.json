@@ -1,4 +1,5 @@
 [
     "ollama/ollama",
-    "langchain-ai/langchain"
+    "langchain-ai/langchain",
+    "openclaw/openclaw"
 ]

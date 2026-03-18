@@ -2,7 +2,11 @@ import requests
 from bs4 import BeautifulSoup
 import os
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from logger import LOG
+
+SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
+
 class HackerNewsAPI:
     def __init__(self):
         self.url = 'https://news.ycombinator.com/newest'
@@ -70,9 +74,10 @@ class HackerNewsAPI:
     def export_hours_hack_news(self, stories, output_dir="hacker_news"):
         """导出热点条目到Markdown文件"""
         try:
-            # 创建日期目录
-            today = datetime.now().strftime("%Y-%m-%d")
-            hour = datetime.now().strftime("%H")
+            # 创建日期目录（上海时区）
+            now = datetime.now(SHANGHAI_TZ)
+            today = now.strftime("%Y-%m-%d")
+            hour = now.strftime("%H")
             date_dir = os.path.join(output_dir, today)
             os.makedirs(date_dir, exist_ok=True)
             
@@ -97,8 +102,8 @@ class HackerNewsAPI:
     def generate_daily_report(self, output_dir="hacker_news", trend_dir="tech_trend"):
         """生成每日报告，汇总当天所有小时文件"""
         try:
-            # 获取当天日期
-            today = datetime.now().strftime("%Y-%m-%d")
+            # 获取当天日期（上海时区）
+            today = datetime.now(SHANGHAI_TZ).strftime("%Y-%m-%d")
             # 当天的小时文件目录
             daily_dir = os.path.join(output_dir, today)
             # 汇总目录路径
