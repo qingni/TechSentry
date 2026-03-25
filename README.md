@@ -43,6 +43,7 @@
 | **多种运行入口** | 守护进程（长期运行）/ Web 界面（手动触发）/ CLI（脚本化操作）/ Docker |
 | **通知推送** | 支持邮件通知、企业微信机器人推送 |
 | **运行指标** | API 统计、任务 KPI、数据源健康度自动落盘 |
+| **运行周报** | 自动生成 HTML 可视化周报，含总结性结论（整体评级 + 维度评估 + 亮点 + 风险建议）、API 调用趋势图、任务耗时图、数据源健康度表格等 |
 
 ---
 
@@ -306,6 +307,7 @@ chmod +x run-docker.sh
 | HN 日报总结 | `hacker_news/tech_trend/<YYYY-MM-DD>_report.md` | — |
 | GitHub Trending 原始 | `github_trend/<YYYY-MM-DD>.md` | — |
 | GitHub Trending 报告 | `github_trend/<YYYY-MM-DD>_report.md` | — |
+| 运行周报 | `reports/dashboard/<start>_<end>.html` | `reports/dashboard/2026-03-19_2026-03-25.html` |
 
 ### 日志目录
 
@@ -334,6 +336,7 @@ chmod +x run-docker.sh
 | Hacker News 小时级热点 | cron | 每 4 小时第 10 分钟（`0:10`、`4:10`、`8:10`…） | 采集最新热门内容并生成小时报 |
 | Hacker News 每日热点 | cron | 每天 `20:30` | 汇总生成日报并发送通知 |
 | GitHub Trending 日报 | cron | 每天 `18:00` | 采集趋势榜并生成日报、发送通知 |
+| 运行指标周报 | cron | 每周一 `00:10` | 聚合上周日志数据，生成 HTML 可视化周报到 `reports/dashboard/` |
 
 > 所有业务任务均设置了 `max_instances=1`（防止重叠执行）、`coalesce=True`（合并错过的执行）以及合理的 `misfire_grace_time`。
 
@@ -348,6 +351,28 @@ chmod +x run-docker.sh
 - **任务耗时 P95**
 - **采集成功率** / **报告生成成功率** / **通知发送成功率**
 - **数据新鲜度**
+
+### 可视化周报
+
+运行 `src/dashboard.py` 可将上述指标聚合为一份 HTML 可视化周报，输出到 `reports/dashboard/` 目录。
+
+```bash
+python src/dashboard.py
+```
+
+周报内容自上而下包括：
+
+| 区块 | 说明 |
+|------|------|
+| **📝 本周运行总结** | 总结性结论（首屏展示）：整体评级（A/B/C/D）、各维度评估（可靠性 / 数据采集 / 性能稳定性 / 调度准时性）、本周亮点、风险与建议 |
+| **概览卡片** | 总执行次数、失败次数、成功率、API 调用总量 |
+| **API 调用趋势** | 堆叠柱状图展示每日各接口调用量 |
+| **任务耗时趋势** | 折线图展示每日各任务平均耗时 |
+| **P95 耗时分布** | 柱状图对比各任务 P95 耗时 |
+| **数据源健康度** | 表格展示各数据源采集成功率、新鲜度 |
+| **任务 KPI 明细** | 表格展示各任务的成功率、平均/P95 耗时、调度偏差 |
+
+> **智能判断逻辑**：耗时峰值 > 周均 2 倍标记为「性能突刺」；数据源新鲜度 > 12 小时触发告警建议。
 
 ---
 
@@ -369,10 +394,13 @@ TechSentry/
 ├── daily_progress/          # GitHub 仓库进展输出
 ├── github_trend/            # GitHub Trending 输出
 ├── hacker_news/             # Hacker News 输出
+├── reports/                 # 可视化报告输出
+│   └── dashboard/           #   运行周报 HTML
 ├── src/
 │   ├── daemon_process.py    # 守护进程主程序
 │   ├── gradio_server.py     # Web 界面
 │   ├── command_tool.py      # 交互式 CLI
+│   ├── dashboard.py         # 运行周报生成（HTML 可视化）
 │   ├── config.py            # 配置加载
 │   ├── github_api.py        # GitHub API 封装
 │   ├── github_trend_api.py  # GitHub Trending 采集

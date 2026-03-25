@@ -13,6 +13,7 @@ from github_trend_api import GithubTrendAPI
 import signal
 import sys
 from cleanup_reports import CleanReportsDir
+from dashboard import generate_weekly_dashboard
 import threading
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -462,6 +463,8 @@ def hack_news_daily_job(hack_news_api, report_generator, notifier):
 
     _update_source_kpi("hackernews", attempts=1)
 
+    # ---- 步骤1: 聚合小时报告 ----
+    t_step1_start = time.time()
     markdown_file_path = None
     try:
         markdown_file_path = hack_news_api.generate_daily_report()
@@ -470,7 +473,10 @@ def hack_news_daily_job(hack_news_api, report_generator, notifier):
         _update_source_kpi("hackernews", failure=1)
         LOG.exception(f"hacknews每日任务采集失败: {e}")
         return
+    t_step1 = time.time() - t_step1_start
 
+    # ---- 步骤2: LLM 生成日报 ----
+    t_step2_start = time.time()
     report = None
     try:
         report, report_file_path = report_generator.generate_hack_news_daily_report(markdown_file_path)
@@ -479,14 +485,20 @@ def hack_news_daily_job(hack_news_api, report_generator, notifier):
         _update_source_kpi("hackernews", report_failure=1)
         LOG.exception(f"hacknews每日任务报告生成失败: {e}")
         return
+    t_step2 = time.time() - t_step2_start
 
+    # ---- 步骤3: 通知推送 ----
+    t_step3_start = time.time()
     try:
         notifier.notify_hack_news_daily(report)
         _update_source_kpi("hackernews", notify_success=1)
     except Exception as e:
         _update_source_kpi("hackernews", notify_failure=1)
         LOG.exception(f"hacknews每日任务通知失败: {e}")
+    t_step3 = time.time() - t_step3_start
 
+    t_total = t_step1 + t_step2 + t_step3
+    LOG.info(f"[hack_news_daily] 耗时明细 | 聚合: {t_step1:.1f}s | LLM生成: {t_step2:.1f}s | 通知: {t_step3:.1f}s | 总计: {t_total:.1f}s")
     LOG.info("[hacknews daily定时任务执行完毕]")
 
 def github_trend_daily_job(github_trend_api, report_generator, notifier):
@@ -535,6 +547,21 @@ def clean_report_dir_job(clean_reports):
     清理报告目录任务
     """
     clean_reports.clean_all_report_dir()
+
+def weekly_dashboard_job():
+    """
+    每周生成运行指标周报HTML
+    """
+    LOG.info("[开始生成运行指标周报]")
+    try:
+        filepath = generate_weekly_dashboard()
+        if filepath:
+            LOG.info(f"[运行指标周报已生成] {filepath}")
+        else:
+            LOG.warning("[运行指标周报] 本周无统计数据，跳过生成")
+    except Exception as e:
+        LOG.exception(f"生成运行指标周报失败: {e}")
+    LOG.info("[运行指标周报任务执行完毕]")
 
 def record_api_stats():
     """记录API统计并落盘KPI快照"""
@@ -662,6 +689,21 @@ def main():
         max_instances=1,
         coalesce=True,
         misfire_grace_time=300
+    )
+
+    # 3.5 运行指标周报（每周一00:10，在KPI落盘之后生成）
+    scheduler.add_job(
+        weekly_dashboard_job,
+        'cron',
+        id='weekly_dashboard_job',
+        replace_existing=True,
+        day_of_week='mon',
+        hour=0,
+        minute=10,
+        timezone=SHANGHAI_TZ,
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=600
     )
 
     # 4. GitHub相关任务（每隔config.update_freq_days天，在指定时间执行）

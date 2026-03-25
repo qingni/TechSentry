@@ -222,6 +222,7 @@ openspec/
 daily_progress/
 github_trend/
 hacker_news/
+reports/
 
 # 日志目录
 logs/

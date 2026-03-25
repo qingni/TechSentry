@@ -6,7 +6,7 @@
 # 配置部分 - 根据实际情况修改
 DAEMON_NAME="DaemonProcess"  # 应用名称
 PYTHON_SCRIPT="src/daemon_process.py"       # Python脚本路径
-VENV_DIR="./venv"            # 虚拟环境目录（如果没有则留空）
+VENV_DIR="./.venv"           # 虚拟环境目录（如果没有则留空）
 LOG_FILE="./logs/$DAEMON_NAME.log"      # 修正：移除赋值语句中的空格
 PID_FILE="./logs/$DAEMON_NAME.pid"      # 进程ID文件路径
 
