@@ -187,7 +187,10 @@ def _aggregate_source_health(records):
         s["collection_rate"] = _safe_pct(s["success"], s["attempts"])
         report_total = s["report_success"] + s["report_failure"]
         s["report_rate"] = _safe_pct(s["report_success"], report_total)
-        notify_total = s["notify_success"] + s["notify_failure"]
+        # 通知成功率：分母应包含 report_failure（报告失败导致通知被跳过，也算通知未成功）
+        # 因为报告失败后不会尝试通知，notify_failure 不会增加，
+        # 但用户期望看到的是"应发出但没发出"的真实比率
+        notify_total = s["notify_success"] + s["notify_failure"] + s["report_failure"]
         s["notify_rate"] = _safe_pct(s["notify_success"], notify_total)
         if s["latest_freshness"] is not None:
             s["freshness_hours"] = round(s["latest_freshness"] / 60, 1)
@@ -533,15 +536,19 @@ def _render_html(week_start, week_end, api_data, kpi_data, source_data, summary)
         </div>
         <div class="card green">
             <div class="value">{kpi_data['success_runs']}</div>
-            <div class="label">成功次数</div>
+            <div class="label">调度成功次数</div>
         </div>
         <div class="card {'green' if kpi_data['failed_runs'] == 0 else 'red'}">
             <div class="value">{kpi_data['failed_runs']}</div>
-            <div class="label">失败次数</div>
+            <div class="label">调度失败次数</div>
         </div>
         <div class="card {'green' if kpi_data['success_rate'] >= 99 else 'orange'}">
             <div class="value">{kpi_data['success_rate']}%</div>
-            <div class="label">任务成功率</div>
+            <div class="label">调度成功率</div>
+        </div>
+        <div class="card {'green' if summary.get('report_rate', 0) >= 99 else 'red' if summary.get('report_rate', 0) < 80 else 'orange'}">
+            <div class="value">{summary.get('report_rate', '-')}%</div>
+            <div class="label">报告成功率</div>
         </div>
         <div class="card blue">
             <div class="value">{api_data['week_total']}</div>
@@ -743,26 +750,46 @@ def _generate_summary(api_data, kpi_data, source_data):
     failed = kpi_data["failed_runs"]
     api_total = api_data["week_total"]
 
-    if success_rate >= 99.9 and failed == 0:
+    # 计算全局报告成功率（综合所有数据源的 report_success / report_total）
+    total_report_success = 0
+    total_report_failure = 0
+    for s in source_data.values():
+        total_report_success += s.get("report_success", 0)
+        total_report_failure += s.get("report_failure", 0)
+    total_report_total = total_report_success + total_report_failure
+    report_rate = round(total_report_success / total_report_total * 100, 1) if total_report_total > 0 else 100.0
+
+    # 计算全局通知成功率
+    total_notify_success = 0
+    total_notify_failure = 0
+    total_notify_skip = 0  # 报告失败导致通知被跳过的次数
+    for s in source_data.values():
+        total_notify_success += s.get("notify_success", 0)
+        total_notify_failure += s.get("notify_failure", 0)
+        # 报告失败的次数 = 通知被跳过的次数（报告失败后不会尝试通知）
+        total_notify_skip += s.get("report_failure", 0)
+
+    # 综合评级：同时考虑调度成功率和报告成功率
+    if success_rate >= 99.9 and failed == 0 and report_rate >= 99.9:
         summary["overall_grade"] = "A"
         summary["overall_icon"] = "🟢"
         summary["overall_label"] = "优秀"
-        summary["overall_desc"] = "系统运行完全正常，所有任务零失败，调度准时无偏差。"
-    elif success_rate >= 95:
+        summary["overall_desc"] = "系统运行完全正常，所有任务零失败，报告生成与推送均正常。"
+    elif success_rate >= 95 and report_rate >= 90:
         summary["overall_grade"] = "B"
         summary["overall_icon"] = "🟡"
         summary["overall_label"] = "良好"
-        summary["overall_desc"] = f"系统整体运行正常，成功率 {success_rate}%，存在少量异常需关注。"
-    elif success_rate >= 80:
+        summary["overall_desc"] = f"系统整体运行正常，调度成功率 {success_rate}%，报告成功率 {report_rate}%，存在少量异常需关注。"
+    elif success_rate >= 80 and report_rate >= 60:
         summary["overall_grade"] = "C"
         summary["overall_icon"] = "🟠"
         summary["overall_label"] = "一般"
-        summary["overall_desc"] = f"系统运行存在较多异常，成功率 {success_rate}%，建议尽快排查。"
+        summary["overall_desc"] = f"系统运行存在较多异常，调度成功率 {success_rate}%，报告成功率 {report_rate}%，建议尽快排查。"
     else:
         summary["overall_grade"] = "D"
         summary["overall_icon"] = "🔴"
         summary["overall_label"] = "需关注"
-        summary["overall_desc"] = f"系统运行异常较多，成功率仅 {success_rate}%，需要立即排查处理。"
+        summary["overall_desc"] = f"系统运行异常较多，调度成功率 {success_rate}%，报告成功率 {report_rate}%，需要立即排查处理。"
 
     # ---- 2. 维度评估 ----
     dimensions = []
@@ -793,24 +820,40 @@ def _generate_summary(api_data, kpi_data, source_data):
             "detail": f"本周共执行 {total_runs} 次任务，{failed} 次失败，成功率 {success_rate}%。",
         })
 
-    # 2.2 数据采集
+    # 2.2 数据采集与报告生成
     all_collection_ok = True
+    all_report_ok = True
     total_attempts = 0
     total_success = 0
     source_count = len(source_data)
+    src_report_failures = 0
+    src_notify_failures = 0
     for s in source_data.values():
         total_attempts += s.get("attempts", 0)
         total_success += s.get("success", 0)
         if s.get("failure", 0) > 0:
             all_collection_ok = False
+        if s.get("report_failure", 0) > 0:
+            all_report_ok = False
+            src_report_failures += s.get("report_failure", 0)
+        src_notify_failures += s.get("notify_failure", 0)
 
-    if all_collection_ok and total_attempts > 0:
+    if all_collection_ok and all_report_ok and total_attempts > 0:
         dimensions.append({
             "name": "数据采集",
             "icon": "📡",
             "grade": "优秀",
             "grade_class": "grade-excellent",
-            "detail": f"{source_count} 个数据源共采集 {total_attempts} 次，<strong>全部成功</strong>，报告与通知推送均正常。",
+            "detail": f"{source_count} 个数据源共采集 {total_attempts} 次，<strong>全部成功</strong>，报告生成与通知推送均正常。",
+        })
+    elif all_collection_ok and not all_report_ok:
+        # 采集正常但报告生成有失败
+        dimensions.append({
+            "name": "数据采集",
+            "icon": "📡",
+            "grade": "需关注",
+            "grade_class": "grade-warning",
+            "detail": f"{source_count} 个数据源共采集 {total_attempts} 次，采集全部成功，但<strong>报告生成失败 {src_report_failures} 次</strong>（报告成功率 {report_rate}%），部分通知推送因此被跳过。",
         })
     elif total_success / max(total_attempts, 1) >= 0.95:
         dimensions.append({
@@ -829,7 +872,7 @@ def _generate_summary(api_data, kpi_data, source_data):
             "detail": f"{source_count} 个数据源共采集 {total_attempts} 次，成功 {total_success} 次，失败率较高。",
         })
 
-    # 2.3 性能稳定性 — 检测耗时突刺
+    # 2.3 性能稳定性 — 检测耗时突刺和骤降
     perf_issues = []
     for job_id in BUSINESS_JOBS:
         dur = kpi_data["job_duration"].get(job_id, {})
@@ -838,9 +881,17 @@ def _generate_summary(api_data, kpi_data, source_data):
             continue
         week_avg = sum(avg_list) / len(avg_list)
         max_val = max(avg_list)
+        min_val = min(avg_list)
+        display_name = JOB_DISPLAY_NAMES.get(job_id, job_id)
+
+        # 检测耗时突刺（峰值超过周均2倍）
         if week_avg > 0 and max_val > week_avg * 2:
-            display_name = JOB_DISPLAY_NAMES.get(job_id, job_id)
             perf_issues.append(f"「{display_name}」出现耗时突刺（峰值 {round(max_val, 1)}s，周均 {round(week_avg, 1)}s）")
+
+        # 检测耗时骤降（最小值不到周均的 1/5，且周均 > 5s）
+        # 耗时骤降通常意味着关键步骤（如 LLM 调用）被跳过
+        if week_avg > 5 and min_val < week_avg * 0.2:
+            perf_issues.append(f"「{display_name}」出现耗时骤降（最低 {round(min_val, 2)}s，周均 {round(week_avg, 1)}s），可能有关键步骤被跳过")
 
     if not perf_issues:
         dimensions.append({
@@ -872,18 +923,40 @@ def _generate_summary(api_data, kpi_data, source_data):
 
     # ---- 3. 亮点提炼 ----
     highlights = []
-    highlights.append(f"✅ 连续 {len(api_data['dates'])} 天运行稳定，任务成功率 {success_rate}%")
-    highlights.append(f"✅ API 累计调用 {api_total} 次，3 个数据源全部健康在线")
+    if report_rate >= 99.9:
+        highlights.append(f"✅ 连续 {len(api_data['dates'])} 天运行稳定，任务成功率 {success_rate}%，报告成功率 {report_rate}%")
+        highlights.append(f"✅ API 累计调用 {api_total} 次，{source_count} 个数据源全部健康在线")
+    else:
+        highlights.append(f"✅ 调度层面连续 {len(api_data['dates'])} 天无崩溃，调度成功率 {success_rate}%")
+        highlights.append(f"✅ API 累计调用 {api_total} 次，{source_count} 个数据源采集正常")
     if not perf_issues:
         highlights.append("✅ 所有任务耗时平稳，无性能抖动")
     summary["highlights"] = highlights
 
     # ---- 4. 风险与建议 ----
     risks = []
+
+    # 报告生成失败风险（最关键的问题）
+    if report_rate < 100:
+        risks.append(f"🔴 报告生成成功率仅 {report_rate}%（共 {total_report_total} 次尝试，{total_report_failure} 次失败），LLM 调用可能存在异常。")
+        # 列出各数据源的报告失败详情
+        for source_key, s in source_data.items():
+            rf = s.get("report_failure", 0)
+            if rf > 0:
+                display_name = SOURCE_DISPLAY_NAMES.get(source_key, source_key)
+                rt = s.get("report_success", 0) + rf
+                rr = s.get("report_rate", "-")
+                risks.append(f"  └─ {display_name}：报告生成 {rt} 次，失败 {rf} 次（成功率 {rr}%）")
+        risks.append("💡 建议：检查 LLM API 的可用性和配额，查看错误日志定位具体失败原因。")
+
+    # 通知被跳过风险
+    if total_notify_skip > 0:
+        risks.append(f"⚠️ 因报告生成失败，共有 {total_notify_skip} 次通知推送被跳过（未尝试发送）。")
+
     if perf_issues:
         for issue in perf_issues:
             risks.append(f"⚠️ {issue}")
-        risks.append("💡 建议：对耗时突刺的任务增加单步计时日志，定位瓶颈是网络还是 API 限流。")
+        risks.append("💡 建议：对耗时异常的任务增加单步计时日志，定位瓶颈是网络还是 API 限流。")
 
     # 检查数据源新鲜度
     for source_key, s in source_data.items():
@@ -896,6 +969,11 @@ def _generate_summary(api_data, kpi_data, source_data):
         risks.append("🎉 本周无风险项，系统运行状态优秀！")
 
     summary["risks"] = risks
+
+    # 保存报告统计数据供渲染使用
+    summary["report_rate"] = report_rate
+    summary["total_report_success"] = total_report_success
+    summary["total_report_failure"] = total_report_failure
 
     return summary
 
